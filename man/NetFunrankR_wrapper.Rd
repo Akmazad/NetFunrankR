@@ -6,10 +6,8 @@
 \usage{
 NetFunrankR_wrapper(
   disease_genes = NULL,
-  PathwayRanker_Type = "ORA",
+  PathwayRanker_Type = "Both",
   PE_ORA_pop = "KEGG",
-  PE_ORA_cutoff_col = "p.adjust",
-  PE_ORA_cutoff_th = 0.05,
   nPermute = 10,
   neighbourhood_th = 1,
   string_PPI_score_th = 900,
@@ -25,10 +23,6 @@ NetFunrankR_wrapper(
 \item{PathwayRanker_Type}{A string that indicates the type of enrichment to be done. Options are: "ORA" (Hypergeometric-distribution based over-representation test), and "TW" (Topology-aware network medicine-based approach), "Both" (Default: both ORA and TW so that the results can be compared).}
 
 \item{PE_ORA_pop}{A string that indicates the set of known annotaiton of pathways or functional term. Current version has the following options: "KEGG" (default), "Reactome" and "WikiPathway".}
-
-\item{PE_ORA_cutoff_col}{A string to indicate the significance column for filter results based on a threshold. Options are: "p.adjust", "pvalue", or "NA" (default: no filter)}
-
-\item{PE_ORA_cutoff_th}{A numeric value indicating the threshold (default: 0.05) for filtering result. Not effective if "PE_ORA_cutoff_col" parameter is set as "NA" (default)}
 
 \item{nPermute}{A number (default: 1000) to indicate the number of permutation iteration to be conducted for hypothesis testing in Network-medicine based functional enrichment}
 

@@ -22,14 +22,18 @@ quantify_network_proximity_score <- function(
   # extract PPI for Human proteins that are enriched in two pathways
   string.ppi.df = protein.links %>%
     dplyr::filter(combined_score > string_PPI_score_th) %>%
-    # dplyr::select(-combined_score)
-    CoDiNA::OrderNames() %>%
-    unique() %>%
+    dplyr::select(-combined_score) %>%
+    # CoDiNA::OrderNames() %>%
+    # unique() %>%
     igraph::graph_from_data_frame(directed = F)
 
+  # browser()
   # get network proximity score
-  network.proximity(net = string.ppi.df, module_a_genes = module_a,
-                    module_b_genes = module_b, nPermute = nPermute)
+  network.proximity(net = string.ppi.df,
+                    module_a_genes = module_a,
+                    module_b_genes = module_b,
+                    neighbourhood_th = neighbourhood_th,
+                    nPermute = nPermute)
 }
 
 #' Title
@@ -46,16 +50,29 @@ quantify_network_proximity_score <- function(
 network.proximity <- function(net,
                               module_a_genes,
                               module_b_genes,
+                              neighbourhood_th,
                               nPermute){
 
 
   d <- module_a_genes
   keep <- which(d %in% V(net)$name)
   d <- unique(d[keep])
+  # d_temp <- unique(d[keep])
+  # # get PPI partners of to expand the space
+  # d <- c(d_temp,
+  #        getPPIpartners(ppi.net = net,
+  #                       geneList = d_temp,
+  #                       hop = neighbourhood_th)) %>% unique()
 
   t <- module_b_genes
   keep <- which(t %in% V(net)$name)
   t <- unique(t[keep])
+  # t_temp <- unique(t[keep])
+  # # get PPI partners of to expand the space
+  # t <- c(t_temp,
+  #        getPPIpartners(ppi.net = net,
+  #                       geneList = t_temp,
+  #                       hop = neighbourhood_th)) %>% unique()
 
   # browser()
   d_td <- get_d(shortest.paths(net, v = t, to=d))
@@ -73,7 +90,7 @@ get_d <- function(dist_matrix){
     clean_matrix <- dist_matrix %>%
     as.data.frame() %>%
     filter(rowSums(is.infinite(as.matrix(.))) != ncol(.)) %>%
-    select(where(~ !all(is.infinite(.x)))) %>%
+    dplyr::select(where(~ !all(is.infinite(.x)))) %>%
     as.matrix()
 
   d <- mean(c(apply(clean_matrix,1,min), apply(clean_matrix,2,min)))

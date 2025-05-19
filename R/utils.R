@@ -1,9 +1,9 @@
 PathwayEnrichment_ORA <- function(
     givenSet,
     PE_ORA_pop,
-    pathway.data,
-    cutoff_col = "p.adjust",
-    cutoff_th = 0.05
+    pathway.data
+    # cutoff_col = "pvalue",
+    # cutoff_th = 0.05
 ){
   if(is.null(givenSet) ||
      length(givenSet) == 0 )
@@ -28,7 +28,7 @@ PathwayEnrichment_ORA <- function(
 
   # enrichment test using HyperGeometric test
   info.gene.overrep = data.frame(
-    matrix(Inf, nrow = nTerms, ncol = 7))
+    matrix(NA, nrow = nTerms, ncol = 7))
 
   K = length(givenSet)
   for (i in 1:nTerms) {
@@ -45,7 +45,7 @@ PathwayEnrichment_ORA <- function(
 
     # size of the overlap
     x = length(x.overlap.genes.symbol)
-    if(x > 2){
+    # if(x > 2){
       info.gene.overrep[i,1] = pathwayNames[i]
       info.gene.overrep[i,2] = paste0(pathway.genes.symbol, collapse = "/")
       info.gene.overrep[i,3] = paste0(x.overlap.genes.symbol, collapse = "/")
@@ -62,7 +62,7 @@ PathwayEnrichment_ORA <- function(
       info.gene.overrep[i,6] = x/M
 
       info.gene.overrep[i,7] = phyper(x, M, N-M, K, lower.tail = FALSE) #He wrote : overlap.genes-1
-    }
+    # }
   }
   # set the column names of the result
   colnames(info.gene.overrep) = c("Description",
@@ -72,13 +72,14 @@ PathwayEnrichment_ORA <- function(
                                   "Count", "GeneRatio",
                                   "pvalue")
   info.gene.overrep = info.gene.overrep %>%
-    dplyr::filter(pvalue != Inf) %>%
+    # dplyr::filter(pvalue != Inf) %>%
     dplyr::mutate("p.adjust" = p.adjust(pvalue,
-                                        method = "fdr",
-                                        n = nrow(.)))
-  res <- info.gene.overrep %>%
-    dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
-    dplyr::arrange(!!dplyr::sym(cutoff_col))
+                                        method = "fdr"
+                                        # n = nrow(.)))
+                                        ))
+  res <- info.gene.overrep #%>%
+    # dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
+    # dplyr::arrange(!!dplyr::sym(cutoff_col))
 
   return(res)
 
@@ -89,9 +90,9 @@ PathwayEnrichment_TopoAw <- function(
     pathway.data,
     neighbourhood_th,
     string_PPI_score_th,
-    nPermute,
-    cutoff_col = "p.adjust",
-    cutoff_th = 0.05
+    nPermute
+    # cutoff_col = "p.adjust",
+    # cutoff_th = 0.05
 ){
   if(is.null(pathway.data) ||
      nrow(pathway.data) == 0)
@@ -103,7 +104,7 @@ PathwayEnrichment_TopoAw <- function(
 
 
   info.Pathway.network.proximity = data.frame(
-    matrix(Inf, nrow = nTerms, ncol = 4))
+    matrix(NA, nrow = nTerms, ncol = 4))
 
   for (i in 1:nTerms) {
   # for (i in 1:2) {
@@ -140,18 +141,21 @@ PathwayEnrichment_TopoAw <- function(
                                   "z_score",
                                   "pvalue")
   info.Pathway.network.proximity = info.Pathway.network.proximity %>%
-    dplyr::filter(pvalue != Inf) %>%
+    # dplyr::filter(pvalue != Inf) %>%
     dplyr::mutate("p.adjust" = p.adjust(pvalue,
-                                        method = "fdr",
-                                        n = nrow(.)))
-  res <- info.Pathway.network.proximity %>%
-    dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
-    dplyr::arrange(!!dplyr::sym(cutoff_col))
+                                        method = "fdr"
+                                        # n = nrow(.)))
+                                        ))
+  res <- info.Pathway.network.proximity #%>%
+    # dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
+    # dplyr::arrange(!!dplyr::sym(cutoff_col))
 
   return(res)
 }
 
 get_all_human_protein_coding_genes <- function(){
+  require(EnsDb.Hsapiens.v75)
+
   edb <- EnsDb.Hsapiens.v75
   edb %>%
     AnnotationDbi::select(.,
