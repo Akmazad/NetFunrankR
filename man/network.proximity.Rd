@@ -2,19 +2,22 @@
 % Please edit documentation in R/netProximityMeasure.R
 \name{network.proximity}
 \alias{network.proximity}
-\title{Title}
+\title{Title Compute network proximity scores between disease genes and the genes in a pathway underlying a PPI network}
 \usage{
-network.proximity(
-  net,
-  module_a_genes,
-  module_b_genes,
-  neighbourhood_th,
-  nPermute
-)
+network.proximity(net, module_a_genes, module_b_genes, nPermute)
 }
 \arguments{
-\item{nPermute}{}
+\item{net}{an igraph object for the PPI network}
+
+\item{module_a_genes}{a vector of disease genes}
+
+\item{module_b_genes}{a vector of pathway genes}
+
+\item{nPermute}{number of permutation for significance calculation}
+}
+\value{
+returns the proximity scores
 }
 \description{
-Title
+Title Compute network proximity scores between disease genes and the genes in a pathway underlying a PPI network
 }

@@ -2,10 +2,9 @@
 % Please edit documentation in R/netProximityMeasure.R
 \name{quantify_network_proximity_score}
 \alias{quantify_network_proximity_score}
-\title{Title}
+\title{Title Compute network proximity scores between disease genes and the genes in a pathway underlying PPI network (after filtering the PPI)}
 \usage{
 quantify_network_proximity_score(
-  neighbourhood_th,
   string_PPI_score_th,
   module_a = c(),
   module_b = c(),
@@ -13,8 +12,17 @@ quantify_network_proximity_score(
 )
 }
 \arguments{
-\item{nPermute}{}
+\item{string_PPI_score_th}{a threshold for filtering StringDB PPI}
+
+\item{module_a}{a vector of disease genes}
+
+\item{module_b}{a vector of pathway genes}
+
+\item{nPermute}{number of permutation for significance calculation}
+}
+\value{
+returns the proximity scores
 }
 \description{
-Title
+Title Compute network proximity scores between disease genes and the genes in a pathway underlying PPI network (after filtering the PPI)
 }

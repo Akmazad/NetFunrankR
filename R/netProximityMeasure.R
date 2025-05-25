@@ -1,17 +1,15 @@
-#' Title
+#' Title Compute network proximity scores between disease genes and the genes in a pathway underlying PPI network (after filtering the PPI)
 #'
-#' @param neighbourhood_th
-#' @param string_PPI_score_th
-#' @param module_a
-#' @param module_b
-#' @param nPermute
+#' @param string_PPI_score_th a threshold for filtering StringDB PPI
+#' @param module_a a vector of disease genes
+#' @param module_b a vector of pathway genes
+#' @param nPermute number of permutation for significance calculation
 #'
-#' @returns
+#' @returns returns the proximity scores
 #' @export
 #'
 #' @examples
 quantify_network_proximity_score <- function(
-    neighbourhood_th,
     string_PPI_score_th,
     module_a = c(),
     module_b = c(),
@@ -32,25 +30,23 @@ quantify_network_proximity_score <- function(
   network.proximity(net = string.ppi.df,
                     module_a_genes = module_a,
                     module_b_genes = module_b,
-                    neighbourhood_th = neighbourhood_th,
                     nPermute = nPermute)
 }
 
-#' Title
+#' Title Compute network proximity scores between disease genes and the genes in a pathway underlying a PPI network
 #'
-#' @param net
-#' @param module_a_genes
-#' @param module_b_genes
-#' @param nPermute
+#' @param net an igraph object for the PPI network
+#' @param module_a_genes a vector of disease genes
+#' @param module_b_genes a vector of pathway genes
+#' @param nPermute number of permutation for significance calculation
 #'
-#' @returns
+#' @returns returns the proximity scores
 #' @export
 #'
 #' @examples
 network.proximity <- function(net,
                               module_a_genes,
                               module_b_genes,
-                              neighbourhood_th,
                               nPermute){
 
 

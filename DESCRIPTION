@@ -19,21 +19,16 @@ Imports:
     dplyr,
     ggplot2,
     data.table,
-Suggests: 
     qdapTools,
     tidyr,
     AnnotationDbi,
-    htmlwidgets,
     forcats,
-    imputeTS,
     tibble,
-    ggraph,
     igraph,
     stringr,
     ggvenn,
     org.Hs.eg.db,
     EnsDb.Hsapiens.v75,
-    circlize,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

@@ -50,12 +50,12 @@ PathwayEnrichment_ORA <- function(
       info.gene.overrep[i,2] = paste0(pathway.genes.symbol, collapse = "/")
       info.gene.overrep[i,3] = paste0(x.overlap.genes.symbol, collapse = "/")
 
-      x.overlap.genes.entrezID = clusterProfiler::bitr(x.overlap.genes.symbol,
-                                                       fromType = "SYMBOL",
-                                                       toType = "ENTREZID",
-                                                       OrgDb = org.Hs.eg.db) %>%
-        dplyr::select(ENTREZID) %>% unlist(use.names = F)
-
+      x.overlap.genes.entrezID = ifelse(length(x.overlap.genes.symbol) > 0,
+                                        mapIds(keys = x.overlap.genes.symbol, keytype  = "SYMBOL",
+                                               column  = "ENTREZID",
+                                               multiVals = "first",
+                                               x = org.Hs.eg.db) %>% unname(),
+                                        "")
 
       info.gene.overrep[i,4] = paste0(x.overlap.genes.entrezID, collapse = "/")
       info.gene.overrep[i,5] = x
@@ -88,7 +88,6 @@ PathwayEnrichment_ORA <- function(
 PathwayEnrichment_TopoAw <- function(
     givenSet,
     pathway.data,
-    neighbourhood_th,
     string_PPI_score_th,
     nPermute
     # cutoff_col = "p.adjust",
@@ -117,7 +116,6 @@ PathwayEnrichment_TopoAw <- function(
 
     # get network proximity score
     netP.scores <- quantify_network_proximity_score(
-      neighbourhood_th = neighbourhood_th,
       string_PPI_score_th = string_PPI_score_th,
       module_a = givenSet,
       module_b = pathway.genes.symbol,

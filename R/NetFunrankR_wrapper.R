@@ -4,7 +4,6 @@
 #' @param PathwayRanker_Type A string that indicates the type of enrichment to be done. Options are: "ORA" (Hypergeometric-distribution based over-representation test), and "TW" (Topology-aware network medicine-based approach), "Both" (Default: both ORA and TW so that the results can be compared).
 #' @param PE_ORA_pop A string that indicates the set of known annotaiton of pathways or functional term. Current version has the following options: "KEGG" (default), "Reactome" and "WikiPathway".
 #' @param nPermute A number (default: 1000) to indicate the number of permutation iteration to be conducted for hypothesis testing in Network-medicine based functional enrichment
-#' @param neighbourhood_th A number (default: 1) to indicate the maximum value of shortest-path-length
 #' @param string_PPI_score_th A number (default: 900) to filter StringDB PPIs only above the given value.
 #' @param doPlot A logical value (default: TRUE) to specify whether to plot the results.
 #' @param plot_width A number (default: 10) to specify the output plot width.
@@ -27,7 +26,6 @@ NetFunrankR_wrapper <- function(
     # PE_ORA_cutoff_col = "p.adjust", # c("p.adjust", "pvalue")
     # PE_ORA_cutoff_th = 0.05,
     nPermute = 10, # number of permutation iteration for hypothesis testing
-    neighbourhood_th = 1, # maximum value of shortest-path-length
     string_PPI_score_th = 900, # controlling PPI confidence
     doPlot = TRUE,
     plot_width = 10,
@@ -36,8 +34,6 @@ NetFunrankR_wrapper <- function(
 ){
   if(is.null(disease_genes))
     stop("Disease genes are required for this analysis!!")
-  if(neighbourhood_th < 1)
-    stop("PPI neighbourhood threshold should be at least 1 !!")
   if(nPermute < 10)
     stop("Permutation number is very small. Please consider increasing it (100 or more - larger, better, but it will run longer) !!")
 
@@ -74,7 +70,6 @@ NetFunrankR_wrapper <- function(
 
     ## 2.2) Do Functional proximity [output-file]
     rankedPathways <- PathwayEnrichment_TopoAw(
-      neighbourhood_th = neighbourhood_th,
       string_PPI_score_th = string_PPI_score_th,
       nPermute = nPermute,
       pathway.data = pathway.data,
@@ -102,7 +97,6 @@ NetFunrankR_wrapper <- function(
     set.seed(123)
 
     rankedPathways_TW <- PathwayEnrichment_TopoAw(
-      neighbourhood_th = neighbourhood_th,
       string_PPI_score_th = string_PPI_score_th,
       nPermute = nPermute,
       pathway.data = pathway.data,

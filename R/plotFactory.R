@@ -9,7 +9,7 @@ plot_venn <- function(vec1, vec2){
   ggvenn(
     x,
     fill_color = c("#616530FF", "#CC8214FF"),
-    stroke_size = 0.1, set_name_size = 7.5, padding = 0.05, text_size = 7.5, stroke_alpha = 0.8
+    stroke_size = 0.1, set_name_size = 7.5, text_size = 7.5, stroke_alpha = 0.8
   )
 }
 

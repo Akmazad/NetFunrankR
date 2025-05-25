@@ -9,7 +9,6 @@ NetFunrankR_wrapper(
   PathwayRanker_Type = "Both",
   PE_ORA_pop = "KEGG",
   nPermute = 10,
-  neighbourhood_th = 1,
   string_PPI_score_th = 900,
   doPlot = TRUE,
   plot_width = 10,
@@ -25,8 +24,6 @@ NetFunrankR_wrapper(
 \item{PE_ORA_pop}{A string that indicates the set of known annotaiton of pathways or functional term. Current version has the following options: "KEGG" (default), "Reactome" and "WikiPathway".}
 
 \item{nPermute}{A number (default: 1000) to indicate the number of permutation iteration to be conducted for hypothesis testing in Network-medicine based functional enrichment}
-
-\item{neighbourhood_th}{A number (default: 1) to indicate the maximum value of shortest-path-length}
 
 \item{string_PPI_score_th}{A number (default: 900) to filter StringDB PPIs only above the given value.}
 
