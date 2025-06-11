@@ -19,6 +19,7 @@ this package:
 ## Installation
 
 ``` r
+BiocManager::install("EnsDb.Hsapiens.v75")
 library(devtools)
 install_github("Akmazad/NetFunrankR")
 ```
