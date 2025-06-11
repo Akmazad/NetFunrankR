@@ -7,35 +7,40 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+  fig.width = 15,
+  fig.height = 12,
+  fig.align = "center",
+  dpi = 144,
+  out.width = "100%"
 )
 ```
 
 # NetFunrankR Wrapper Tutorial
+
 This vignette demonstrates how to use the `NetFunrankR` package for network-proximity empowered functional enrichment test and comparative performance with `hypergeometric distribution` based over-representation test - with the `NetFunrankR_wrapper`.
 
 ## Overview
-The `NetFunrankR_wrapper` function performs two types of pathway enrichment analyses:
- 1. **ORA**: Traditional over-representation analysis (hypergeometric test)
- 2. **TW**: Topology-aware network proximity analysis
+
+The `NetFunrankR_wrapper` function performs two types of pathway enrichment analyses: - **ORA**: Traditional over-representation analysis (hypergeometric test) - **TW**: Topology-aware network proximity analysis
 
 Results include Reports (CSV files) with ranked pathways and comparative visualization (ggplot2 object and PDFs).
 
 ## Installation
+
 Ensure required dependencies are installed:
 
-# ```{r setup, message=FALSE, warning=F}
-# # Install the package (if not public, use `devtools::install_local()`):
-# devtools::install_github("Akmazad/NetFunrankR")
-# ```
+    ```{r}
+    # devtools::install_github("Akmazad/NetFunrankR")
+    ```
+
 
 ## Basic Usage
 
-### Load Package 
-```{r setup, message=F, warning=F}
+### Load Package
+
+```{r message=F, warning=F}
 library(dplyr)
 library(data.table)
 library(ggplot2)
@@ -43,15 +48,37 @@ library(NetFunrankR)
 outdir <- "./NetFunrankR_results/"
 ```
 
+```{r theme-myvignette, include=FALSE}
+library(ggplot2)
+
+theme_myvignette <- function(base_size = 8, base_family = "sans") {
+  theme_minimal(base_size = base_size, base_family = base_family) +
+    theme(
+      plot.title = element_text(size = rel(1.4), face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(size = rel(1.1), hjust = 0.5),
+      axis.title = element_text(size = rel(1.1)),
+      axis.text = element_text(size = rel(1)),
+      legend.title = element_text(size = rel(1.1)),
+      legend.text = element_text(size = rel(1)),
+      plot.margin = margin(10, 10, 10, 10),
+      panel.grid.major = element_line(color = "gray80", size = 0.2),
+      panel.grid.minor = element_blank()
+    )
+}
+
+theme_set(theme_myvignette())
+```
+
 ### Load example disease genes
+
 The package comes with an example vector of disease genes (COPD) named example_enrich.df. Let's observe the head of this data..
 
 ```{r, message=F, warning=F}
 print(head(COPD_proteinCodingGenes))
 ```
 
-
 ### Perform analysis
+
 With the given disease genes, a wrapper function (`NetFunrankR_wrapper`) can be invoked to run the whole analysis, and the results (reports, plots - both pdf and ggplot2 objects) are saved in a given directory (default: `./NetFunrankR_Results/`).
 
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
@@ -64,35 +91,46 @@ NetFunrankR_wrapper(
 ```
 
 ### Check results
+
 #### Number of significantly enriched terms/pathways
+
 This venn diagram shows counts of significantly enriched terms/pathways by the two methods
+
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
 load(paste0(outdir, "CommonFunctions_ORA_TW.vennplt.obj.RData"))
 common.terms.vennplt.obj
 ```
 
 #### Significantly enriched terms/pathways
+
 This plot shows the terms/pathways that are significantly enriched (`pvalue < 0.05`) and commonly found between Network-Proximity based and Over-representation based methods
+
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
 load(paste0(outdir,"CommonFunctions_ORA_TW.barplt.obj.RData"))
 common.terms.barplt.obj
 ```
 
 #### Exclusive terms/pathways found by ORA
+
 This plot shows the terms/pathways that are exclusively enriched (`pvalue < 0.05`) via ORA method
+
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
 load(paste0(outdir,"Only_ORA_terms.plt.obj.RData"))
 only_ORA_terms.plt.obj
 ```
 
 #### Exclusive terms/pathways found by TW
+
 This plot shows the terms/pathways that are exclusively enriched (`pvalue < 0.05`) via TW method
+
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
 load(paste0(outdir,"Only_TW_terms.plt.obj.RData"))
 only_TW_terms.plt.obj
 ```
+
 ### Further configuration of results
-The enrichment results from both the methods can be further controlled based on filtering `p.adjust < 0.05` instead of the nominal `pvalue`. 
+
+The enrichment results from both the methods can be further controlled based on filtering `p.adjust < 0.05` instead of the nominal `pvalue`.
 
 ```{r}
     rankedPathways_ORA <- fread(paste0(outdir,"KEGG_PE_ORA_result.csv"))
@@ -115,28 +153,28 @@ p1 <- plot_venn(
         vec1 = rankedPathways_ORA_filt %>% dplyr::pull(Description),
         vec2 = rankedPathways_TW_filt %>% dplyr::pull(Description))
 # double-bar plot
-p2 <- dplyr::inner_join(
+p2 <- inner_join(
         rankedPathways_ORA_filt,
         rankedPathways_TW_filt,
         by = "Description") %>%
   plot_double_bar()
 # exclusive ORA 
-p3 <- dplyr::anti_join(
+p3 <- anti_join(
         rankedPathways_ORA_filt,
         rankedPathways_TW_filt,
         by = c("Description" = "Description")) %>%
   plot_lollipop(color_palette = c("#616530FF", "#dce58f"))
 # exclusive TW
-p4 <- dplyr::anti_join(
+p4 <- anti_join(
         rankedPathways_TW_filt,
         rankedPathways_ORA_filt,
         by = c("Description" = "Description")) %>%
   plot_lollipop(color_palette = c("#CC8214FF", "#f6e8b1"))
-p1_p2 <- cowplot::plot_grid(p1,p2,
+p1_p2 <- plot_grid(p1,p2,
                             labels = c("a","b"),
                             rel_heights = c(5,6),
                             ncol = 1)
-final_plot <- cowplot::plot_grid(p1_p2,p3,p4,
+final_plot <- plot_grid(p1_p2,p3,p4,
                    # rel_heights = c(1,1),
                    rel_widths = c(1,1,1),
                    labels = c("", "c", "d"), 
@@ -152,6 +190,7 @@ final_plot <- cowplot::plot_grid(p1_p2,p3,p4,
 ```
 
 ### Performance analysis on smaller input
+
 With the given disease genes, a wrapper function (`NetFunrankR_wrapper`) can be invoked to run the whole analysis, and the results (reports, plots - both pdf and ggplot2 objects) are saved in a given directory (default: `./NetFunrankR_Results_small/`).
 
 ```{r out.width="100%", out.height="100%", message=F, warning=F}
@@ -165,7 +204,7 @@ NetFunrankR_wrapper(
 
 ```
 
-We want to observe if the Network-proximity based enrichment test (TW) performs better than ORA when the input genesets are random and small-sized. 
+We want to observe if the Network-proximity based enrichment test (TW) performs better than ORA when the input genesets are random and small-sized.
 
 ```{r}
     rankedPathways_ORA <- fread(paste0(outdir,"KEGG_PE_ORA_result.csv"))
@@ -226,16 +265,15 @@ final_plot <- cowplot::plot_grid(p1_p2,p3,p4,
 ```
 
 # Conclusion
+
 In this vignette, we demonstrated the basic functionality of the NetFunrankR package. We loaded example disease genes, performed both Over-representation (ORA) and topology-aware (TW) network-proximity methods for functional term/pathway enrichment, compare, report and visualize results. For more detailed analysis, refer to the package documentation.
 
 # References
- - Network proximity method: Menche et al., Science (2015)
- - STRING DB: https://string-db.org
- - ORA implementation: clusterProfiler (Yu et al., 2012)
 
- ---
- *For detailed methodology, see package documentation: `?NetFunrankR_wrapper`*
+-   Network proximity method: Menche et al., Science (2015)
+-   STRING DB: <https://string-db.org>
+-   ORA implementation: clusterProfiler (Yu et al., 2012)
 
+------------------------------------------------------------------------
 
-
-
+*For detailed methodology, see package documentation: `?NetFunrankR_wrapper`*
