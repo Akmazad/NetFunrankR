@@ -110,8 +110,8 @@ NetFunrankR_wrapper <- function(
     # compare
 
     # remove later ----
-    rankedPathways_ORA <- fread("NetFunrankR_results/KEGG_PE_ORA_result.csv")
-    rankedPathways_TW <- fread("NetFunrankR_results/KEGG_PE_TopoAw_result.csv")
+    rankedPathways_ORA <- fread(paste0(outdir, PE_ORA_pop, "_PE_ORA_result.csv"))
+    rankedPathways_TW <- fread(paste0(outdir, PE_ORA_pop, "_PE_TopoAw_result.csv"))
     rankedPathways_ORA_filt <- rankedPathways_ORA %>% dplyr::filter(pvalue < 0.05)
     rankedPathways_TW_filt <- rankedPathways_TW  %>% dplyr::filter(pvalue < 0.05)
     # ----
