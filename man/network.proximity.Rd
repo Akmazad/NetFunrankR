@@ -2,22 +2,25 @@
 % Please edit documentation in R/netProximityMeasure.R
 \name{network.proximity}
 \alias{network.proximity}
-\title{Title Compute network proximity scores between disease genes and the genes in a pathway underlying a PPI network}
+\title{Network proximity between two gene modules (NetFunrankR v1 interface)}
 \usage{
-network.proximity(net, module_a_genes, module_b_genes, nPermute)
+network.proximity(net, module_a_genes, module_b_genes, nPermute = 1000)
 }
 \arguments{
-\item{net}{an igraph object for the PPI network}
+\item{net}{an \code{nf_network}, or an igraph object.}
 
-\item{module_a_genes}{a vector of disease genes}
+\item{module_a_genes}{query (disease) genes.}
 
-\item{module_b_genes}{a vector of pathway genes}
+\item{module_b_genes}{gene set (pathway) genes.}
 
-\item{nPermute}{number of permutation for significance calculation}
+\item{nPermute}{number of permutations.}
 }
 \value{
-returns the proximity scores
+numeric vector: observed distance, z-score, empirical p-value.
 }
 \description{
-Title Compute network proximity scores between disease genes and the genes in a pathway underlying a PPI network
+Symmetric module-to-module proximity
+\eqn{d_{XY} = (\sum_x \min_y d(x,y) + \sum_y \min_x d(x,y)) / (|X| + |Y|)}
+with a degree-binned permutation null for the query module. Kept for
+backward compatibility; \code{\link{nf_proximity_test}} is recommended.
 }

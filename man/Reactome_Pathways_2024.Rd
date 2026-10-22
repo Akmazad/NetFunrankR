@@ -10,7 +10,9 @@ A data frame with two variables:
 \item{\code{GeneSymbol}}{HUGO gene symbols belonging to a pathway}
 \item{\code{PathwayName}}{Pathway name}
 }
-#' @source <https://maayanlab.cloud/Enrichr/#libraries>
+}
+\source{
+<https://maayanlab.cloud/Enrichr/#libraries>
 }
 \usage{
 Reactome_Pathways_2024

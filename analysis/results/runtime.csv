@@ -1,0 +1,88 @@
+method,library,size,n_perm,seconds
+NetFunrankR v1 (original code),KEGG,307,100,8396.8
+set distances (once per library),KEGG,,,3.01000000000001
+NFR (all four tests),KEGG,10,,1
+ORA,KEGG,10,,0.140000000000001
+NEA,KEGG,10,,0.019999999999996
+RWR (200 perm),KEGG,10,,3.30000000000001
+Proximity-z (1000 perm),KEGG,10,,0.109999999999999
+NetFunrankR-v1 statistic (1000 perm),KEGG,10,,22.24
+NFR (all four tests),KEGG,50,,1
+ORA,KEGG,50,,0.140000000000001
+NEA,KEGG,50,,0
+RWR (200 perm),KEGG,50,,3.34
+Proximity-z (1000 perm),KEGG,50,,0.329999999999998
+NetFunrankR-v1 statistic (1000 perm),KEGG,50,,23.91
+NFR (all four tests),KEGG,100,,1.29000000000002
+ORA,KEGG,100,,0.139999999999986
+NEA,KEGG,100,,0
+RWR (200 perm),KEGG,100,,3.44999999999999
+Proximity-z (1000 perm),KEGG,100,,0.52000000000001
+NetFunrankR-v1 statistic (1000 perm),KEGG,100,,23.55
+NFR (all four tests),KEGG,250,,2
+ORA,KEGG,250,,0.159999999999997
+NEA,KEGG,250,,0
+RWR (200 perm),KEGG,250,,3.55000000000001
+Proximity-z (1000 perm),KEGG,250,,0.819999999999993
+NetFunrankR-v1 statistic (1000 perm),KEGG,250,,23.42
+NFR (all four tests),KEGG,500,,5.09999999999999
+ORA,KEGG,500,,0.159999999999997
+NEA,KEGG,500,,0
+RWR (200 perm),KEGG,500,,3.56
+Proximity-z (1000 perm),KEGG,500,,1.27000000000001
+NetFunrankR-v1 statistic (1000 perm),KEGG,500,,24.01
+NFR (all four tests),KEGG,1000,,6.66999999999999
+ORA,KEGG,1000,,0.159999999999997
+NEA,KEGG,1000,,0
+RWR (200 perm),KEGG,1000,,3.42000000000002
+Proximity-z (1000 perm),KEGG,1000,,1.99000000000001
+NetFunrankR-v1 statistic (1000 perm),KEGG,1000,,24.72
+NFR (all four tests),KEGG,2000,,6.79000000000002
+ORA,KEGG,2000,,0.159999999999968
+NEA,KEGG,2000,,0
+RWR (200 perm),KEGG,2000,,3.49000000000001
+Proximity-z (1000 perm),KEGG,2000,,3.25
+NetFunrankR-v1 statistic (1000 perm),KEGG,2000,,26.46
+set distances (once per library),Reactome,,,19.81
+NFR (all four tests),Reactome,10,,6.84000000000003
+ORA,Reactome,10,,1.08000000000004
+NEA,Reactome,10,,0
+RWR (200 perm),Reactome,10,,3.50999999999999
+Proximity-z (1000 perm),Reactome,10,,0.550000000000011
+NetFunrankR-v1 statistic (1000 perm),Reactome,10,,114
+NFR (all four tests),Reactome,50,,7.37000000000001
+ORA,Reactome,50,,1.08999999999998
+NEA,Reactome,50,,0
+RWR (200 perm),Reactome,50,,3.53999999999996
+Proximity-z (1000 perm),Reactome,50,,1.39000000000004
+NetFunrankR-v1 statistic (1000 perm),Reactome,50,,118.85
+NFR (all four tests),Reactome,100,,9.21999999999991
+ORA,Reactome,100,,1.17000000000007
+NEA,Reactome,100,,0.0200000000000955
+RWR (200 perm),Reactome,100,,3.56000000000006
+Proximity-z (1000 perm),Reactome,100,,2.32999999999993
+NetFunrankR-v1 statistic (1000 perm),Reactome,100,,131.37
+NFR (all four tests),Reactome,250,,14.97
+ORA,Reactome,250,,1.18000000000006
+NEA,Reactome,250,,0.0100000000001046
+RWR (200 perm),Reactome,250,,3.83000000000004
+Proximity-z (1000 perm),Reactome,250,,4.99000000000001
+NetFunrankR-v1 statistic (1000 perm),Reactome,250,,131.84
+NFR (all four tests),Reactome,500,,39.24
+ORA,Reactome,500,,1.19999999999993
+NEA,Reactome,500,,0
+RWR (200 perm),Reactome,500,,3.99000000000001
+Proximity-z (1000 perm),Reactome,500,,7.94000000000006
+NetFunrankR-v1 statistic (1000 perm),Reactome,500,,125.46
+NFR (all four tests),Reactome,1000,,47.4099999999999
+ORA,Reactome,1000,,1.16999999999985
+NEA,Reactome,1000,,0
+RWR (200 perm),Reactome,1000,,3.66000000000008
+Proximity-z (1000 perm),Reactome,1000,,13.0500000000002
+NetFunrankR-v1 statistic (1000 perm),Reactome,1000,,
+NFR (all four tests),Reactome,2000,,45.3300000000002
+ORA,Reactome,2000,,1.19000000000005
+NEA,Reactome,2000,,0
+RWR (200 perm),Reactome,2000,,3.69000000000005
+Proximity-z (1000 perm),Reactome,2000,,20.46
+NetFunrankR-v1 statistic (1000 perm),Reactome,2000,,

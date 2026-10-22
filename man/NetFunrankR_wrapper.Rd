@@ -2,14 +2,15 @@
 % Please edit documentation in R/NetFunrankR_wrapper.R
 \name{NetFunrankR_wrapper}
 \alias{NetFunrankR_wrapper}
-\title{Title This function works as a wrapper for running the whole functional analysis using network medicine based approach.}
+\title{Run the complete NetFunrankR analysis}
 \usage{
 NetFunrankR_wrapper(
   disease_genes = NULL,
-  PathwayRanker_Type = "Both",
   PE_ORA_pop = "KEGG",
-  nPermute = 10,
-  string_PPI_score_th = 900,
+  network = NULL,
+  min_size = 5L,
+  max_size = 500L,
+  alpha = 0.05,
   doPlot = TRUE,
   plot_width = 10,
   plot_height = 8,
@@ -17,34 +18,34 @@ NetFunrankR_wrapper(
 )
 }
 \arguments{
-\item{disease_genes}{Input genes (a vector) that are used functional enrichment analysis. Default is "COPD-related genes".}
+\item{disease_genes}{query genes (HGNC symbols for the built-in data).}
 
-\item{PathwayRanker_Type}{A string that indicates the type of enrichment to be done. Options are: "ORA" (Hypergeometric-distribution based over-representation test), and "TW" (Topology-aware network medicine-based approach), "Both" (Default: both ORA and TW so that the results can be compared).}
+\item{PE_ORA_pop}{pathway library: "KEGG", "Reactome", "WikiPathways", or a
+named list / annotation data.frame of gene sets.}
 
-\item{PE_ORA_pop}{A string that indicates the set of known annotaiton of pathways or functional term. Current version has the following options: "KEGG" (default), "Reactome" and "WikiPathway".}
+\item{network}{an \code{nf_network}; default \code{string_network("noKB")}.}
 
-\item{nPermute}{A number (default: 1000) to indicate the number of permutation iteration to be conducted for hypothesis testing in Network-medicine based functional enrichment}
+\item{min_size, max_size}{gene-set size limits (genes in the network).}
 
-\item{string_PPI_score_th}{A number (default: 900) to filter StringDB PPIs only above the given value.}
+\item{alpha}{FDR threshold for plots and the evidence classes.}
 
-\item{doPlot}{A logical value (default: TRUE) to specify whether to plot the results.}
+\item{doPlot}{logical; write figures.}
 
-\item{plot_width}{A number (default: 10) to specify the output plot width.}
+\item{plot_width, plot_height}{figure size (inches).}
 
-\item{plot_height}{A number (default: 10) to specify the output plot height.}
-
-\item{outdir}{A string to indicate the output directory to save all the results.}
+\item{outdir}{output directory.}
 }
 \value{
-""
+(invisibly) the \code{nf_result} data.frame.
 }
 \description{
-Title This function works as a wrapper for running the whole functional analysis using network medicine based approach.
+Runs the decomposed network-proximity test (\code{\link{nf_proximity_test}})
+together with classical over-representation analysis, writes the result
+table and (optionally) the figures to \code{outdir}.
 }
 \examples{
-#' library(NetFunrankR)
-library(dplyr)
-NetFunrankR_wrapper(disease_genes = COPD_proteinCodingGenes,
-              doPlot = TRUE,
-              nPermute = 100)
+\dontrun{
+res <- NetFunrankR_wrapper(disease_genes = COPD_proteinCodingGenes)
+head(res)
+}
 }

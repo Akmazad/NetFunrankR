@@ -1,0 +1,138 @@
+% =====================================================================
+% NetFunrankR v2 -- Methods
+% Requires: amsmath, amssymb, amsthm (for the proposition), natbib
+% =====================================================================
+\section{Methods}\label{sec:methods}
+
+\subsection{Overview}
+NetFunrankR tests whether a query gene list $X$ (e.g.\ disease genes, GWAS loci or differentially expressed genes) is \emph{closer} to a gene set $Y$ (pathway or functional term) in a protein--protein interaction (PPI) network than expected for degree-matched random genes, and decomposes this proximity into two components with distinct biological meaning: (i) \emph{direct membership}, i.e.\ query genes that are annotated to $Y$ (the information used by over-representation analysis, ORA), and (ii) \emph{network proximity beyond overlap}, i.e.\ query genes that are not annotated to $Y$ but lie closer to its members than expected. Both components are tested against exact, permutation-free, degree-preserving null distributions, and combined into a single enrichment p-value (Figure~\ref{fig:schematic}).
+
+\subsection{Interactome}\label{sec:interactome}
+Human protein associations were obtained from STRING v12.0 \citep{Szklarczyk2023} (\texttt{9606.protein.links.detailed.v12.0}) and mapped to HGNC symbols through the STRING protein annotation file. STRING's published combined score integrates seven evidence channels, two of which---\emph{curated databases} (which import KEGG, Reactome and other pathway resources) and \emph{text mining}---are partly derived from the very annotations that enrichment analysis tests. Using them would make network proximity to a pathway partly circular. We therefore recomputed the combined score from the remaining channels $\mathcal{C} = \{$neighbourhood, gene fusion, co-occurrence, co-expression, experiments$\}$ using STRING's own integration rule \citep{vonMering2005}:
+\begin{equation}
+s^{\mathrm{noKB}} = s^{*} + p_0\,(1 - s^{*}),\qquad
+s^{*} = 1 - \prod_{c \in \mathcal{C}} \left(1 - \max\!\left\{\frac{s_c - p_0}{1 - p_0},\, 0\right\}\right),
+\label{eq:string}
+\end{equation}
+where $s_c \in [0,1]$ is the channel score and $p_0 = 0.041$ the STRING prior. Unless stated otherwise, edges with $s^{\mathrm{noKB}} \ge 0.4$ were retained (240,307 edges among 16,024 proteins in the largest connected component, LCC), a network of the same size as the conventional full-evidence STRING network at $s \ge 0.7$. The LCC of the simple undirected graph $G = (V, E)$ was used throughout, so that all shortest-path distances are finite. Sensitivity analyses used $s^{\mathrm{noKB}} \ge 0.7$ and the full-evidence score $s \ge 0.7$ (Section~\ref{sec:robust}).
+
+\subsection{Notation and proximity statistic}
+Let $d(u, v)$ denote the shortest-path (hop) distance in $G$ and, for a gene set $Y \subseteq V$,
+\begin{equation}
+d_Y(v) = \min_{y \in Y} d(v, y), \qquad v \in V,
+\end{equation}
+the distance from node $v$ to the closest member of $Y$; $d_Y(v) = 0$ if and only if $v \in Y$. For a query $X = \{x_1, \dots, x_n\} \subseteq V$ (query genes absent from the LCC are reported and discarded) we use the \emph{closest-distance} proximity of \citet{Guney2016},
+\begin{equation}
+d_c(X, Y) = \frac{1}{n}\sum_{i=1}^{n} d_Y(x_i) = \frac{S}{n}, \qquad S = \sum_{i=1}^{n} d_Y(x_i),
+\label{eq:dc}
+\end{equation}
+which was the best-performing proximity measure for drug--disease associations in that study. The vectors $d_Y(\cdot)$ for \emph{all} gene sets of a library are computed simultaneously by a multi-source breadth-first search written as repeated sparse matrix products: with $A$ the adjacency matrix and $F^{(0)}$ the $|V| \times K$ membership indicator of the $K$ gene sets, the frontier at layer $\ell$ is $F^{(\ell)} = \mathbf{1}[A F^{(\ell-1)} > 0] \wedge \neg R^{(\ell-1)}$, where $R$ accumulates visited nodes, and $d_{Y_k}(v) = \ell$ for $F^{(\ell)}_{vk} = 1$. This requires one sparse product per BFS layer (typically $\le 8$) for the whole library, instead of $\sum_k |Y_k|$ single-source searches.
+
+The overlap is $O = |X \cap Y| = \#\{i : d_Y(x_i) = 0\}$ and the \emph{beyond-overlap} distance is $S' = \sum_{i:\, x_i \notin Y} d_Y(x_i)$. Because members contribute zero distance, $S' = S$ numerically; the two statistics differ in their null distributions (below).
+
+\subsection{Degree-preserving null model}
+Gene lists from disease studies are strongly enriched for highly connected, well-studied proteins \citep{Barabasi2011,Haynes2018}, and highly connected proteins are both closer to everything and more often annotated to pathways. A valid null must therefore preserve the degree of the query genes. Following \citet{Guney2016}, nodes are sorted by degree and consecutive degree values are pooled into bins $\mathcal{B}_1, \dots, \mathcal{B}_J$ containing at least $b_{\min} = 100$ nodes each. Let $b(i)$ denote the bin of query gene $x_i$. The null hypothesis is
+\begin{equation}
+H_0:\; x_i \overset{\text{ind.}}{\sim} \mathrm{Uniform}\big(\mathcal{B}_{b(i)} \cap \mathcal{U}\big),\qquad i = 1, \dots, n,
+\label{eq:h0}
+\end{equation}
+i.e.\ each query gene behaves like a random gene of the same degree class, where $\mathcal{U}$ is the background of genes that could have been selected (all network genes by default; the measured genes for expression data). Equation~\eqref{eq:h0} samples with replacement; for bins of $\ge 100$ nodes the difference to sampling without replacement is negligible, which we verified against Monte-Carlo permutation (Supplementary Figure~S1).
+
+For each gene set $Y$ and bin $j$ define the bin-specific distance distribution
+\begin{equation}
+f_{Y,j}(\delta) = \frac{\#\{v \in \mathcal{B}_j \cap \mathcal{U} : d_Y(v) = \delta\}}{|\mathcal{B}_j \cap \mathcal{U}|}, \qquad \delta = 0, 1, \dots, \delta_{\max},
+\end{equation}
+whose mass at zero, $\pi_{Y,j} = f_{Y,j}(0)$, is the probability that a random gene of degree class $j$ belongs to $Y$.
+
+\subsection{Exact null distributions by discrete convolution}
+Under $H_0$ the summands of $S$ are independent integer-valued variables with probability mass functions $f_{Y, b(i)}$. Hence the null distribution of $S$ is the convolution
+\begin{equation}
+P_{H_0}(S = s) = \Big(\mathop{\scalebox{1.5}{$\ast$}}_{i=1}^{n} f_{Y,b(i)}\Big)(s) = \Big(\mathop{\scalebox{1.5}{$\ast$}}_{j=1}^{J} f_{Y,j}^{\,\ast m_j}\Big)(s),
+\label{eq:conv}
+\end{equation}
+where $m_j$ is the number of query genes in bin $j$ and $f^{\ast m}$ the $m$-fold self-convolution. The support of $S$ is $\{0, \dots, n\,\delta_{\max}\}$ with $\delta_{\max} \le 10$ in practice, so Equation~\eqref{eq:conv} is evaluated exactly by direct convolution in $O(n^2 \delta_{\max}^2)$ operations. Since all terms are non-negative, direct convolution has no cancellation error and tail probabilities are accurate down to the floating-point underflow limit ($\approx 10^{-300}$), unlike FFT-based convolution or Monte-Carlo permutation, whose resolution is bounded by the number of permutations $B$ ($p \ge 1/(B+1)$). The one-sided \emph{total proximity} p-value is
+\begin{equation}
+p_{\mathrm{prox}} = P_{H_0}(S \le s_{\mathrm{obs}}).
+\end{equation}
+
+\subsection{Decomposition into overlap and beyond-overlap evidence}
+\paragraph{Degree-aware overlap test.} Under $H_0$, the membership indicators $I_i = \mathbf{1}[x_i \in Y]$ are independent Bernoulli variables with success probabilities $\pi_{Y, b(i)}$, so $O = \sum_i I_i$ follows a Poisson--binomial distribution, obtained exactly by convolving the $n$ Bernoulli kernels (equivalently, the $J$ binomial distributions $\mathrm{Bin}(m_j, \pi_{Y,j})$):
+\begin{equation}
+p_{\mathrm{overlap}} = P_{H_0}(O \ge o_{\mathrm{obs}}).
+\end{equation}
+This test differs from the hypergeometric ORA in one respect: the probability that a query gene hits $Y$ depends on its degree class. When hubs are over-represented both among query genes and among pathway members, the hypergeometric test (which assumes a common probability $|Y|/N$) is anti-conservative, whereas $p_{\mathrm{overlap}}$ is not (Results, Section~\ref{res:calibration}). This mirrors the correction of gene-length bias in RNA-seq ORA by GOseq \citep{Young2010}, with network degree playing the role of gene length.
+
+\paragraph{Beyond-overlap (conditional) proximity test.} Conditionally on the membership pattern $I = (I_1, \dots, I_n)$, each non-member query gene is, under $H_0$, uniform on the non-members of its bin, $\mathcal{B}_{b(i)} \cap \mathcal{U} \setminus Y$, whose distance distribution is the zero-truncated kernel
+\begin{equation}
+g_{Y,j}(\delta) = \frac{f_{Y,j}(\delta)}{1 - \pi_{Y,j}}, \qquad \delta \ge 1 .
+\end{equation}
+The conditional null distribution of $S'$ is therefore $\ast_{i: I_i = 0}\, g_{Y, b(i)}$, and
+\begin{equation}
+p_{\mathrm{beyond}} = P_{H_0}\big(S' \le s'_{\mathrm{obs}} \,\big|\, I\big).
+\end{equation}
+$p_{\mathrm{beyond}}$ asks whether the query genes that are \emph{not} annotated to $Y$ are nevertheless closer to $Y$ than random non-members of the same degree, i.e.\ whether there is network evidence for an association that annotation-based tests cannot see (because of incomplete annotation, or because the query genes act on the pathway through interaction partners).
+
+\paragraph{Beyond-overlap linker test.} The distance sum $S'$ averages over all non-member query genes; when only a minority of them relate to $Y$ (the typical situation for GWAS loci), the signal is diluted by the many unrelated genes. We therefore also test the number of \emph{linker genes}, non-member query genes that interact directly with a member of $Y$,
+\begin{equation}
+L = \#\{i : d_Y(x_i) = 1\}.
+\end{equation}
+Under $H_0$ and conditionally on $I$, each non-member query gene is a linker independently with probability $q_{Y,b(i)} = g_{Y,b(i)}(1)$, so $L$ is Poisson--binomial and
+\begin{equation}
+p_{\mathrm{linker}} = P_{H_0}\big(L \ge l_{\mathrm{obs}} \,\big|\, I\big)
+\end{equation}
+is computed exactly (saddlepoint for long lists). $L$ is the beyond-overlap, degree-calibrated analogue of the edge counts used by network enrichment analysis \citep{Alexeyenko2012}: it counts query genes rather than edges, excludes annotated members, and replaces the configuration-model $z$-score with an exact conditional null.
+
+\paragraph{Combination.}
+\begin{proposition}\label{prop:indep}
+Under $H_0$ (Eq.~\ref{eq:h0}), $p_{\mathrm{overlap}}$ is a function of $I$ only, and the (randomised) conditional p-values $p_{\mathrm{beyond}}$ and $p_{\mathrm{linker}}$ are each uniform on $(0,1)$ conditionally on every value of $I$. Consequently each of them is independent of $p_{\mathrm{overlap}}$ under $H_0$.
+\end{proposition}
+\begin{proof}[Sketch]
+Under $H_0$ the pairs $(I_i, x_i)$ are independent across $i$ and, given $I_i = 0$, $x_i$ is uniform on $\mathcal{B}_{b(i)} \cap \mathcal{U} \setminus Y$. Hence, given $I$, $S'$ and $L$ have exactly the distributions used to compute $p_{\mathrm{beyond}}$ and $p_{\mathrm{linker}}$, so the randomised p-values are $\mathrm{U}(0,1)$ given $I$; their conditional distribution does not depend on $I$, which implies independence from any function of $I$, in particular from $p_{\mathrm{overlap}}$.
+\end{proof}
+By Proposition~\ref{prop:indep}, Fisher's statistic
+\begin{equation}
+T = -2\left(\log \tilde p_{\mathrm{overlap}} + \log \tilde p_{\mathrm{linker}}\right) \;\overset{H_0}{\sim}\; \chi^2_4,
+\qquad p_{\mathrm{combined}} = P(\chi^2_4 \ge T),
+\label{eq:fisher}
+\end{equation}
+is a valid combined test. NetFunrankR uses the linker test in the combination by default and reports the distance-based combination ($p_{\mathrm{beyond}}$ in place of $p_{\mathrm{linker}}$) as an alternative. This default was chosen after comparing both variants on the GWAS benchmark (Section~\ref{res:gwas}); the expression benchmark, the simulations and the case study were not used for this choice, and results for both variants are reported throughout. Because $O$ and $S'$ are discrete, we use mid-p values $\tilde p = P(\cdot\ \text{more extreme}) + \tfrac12 P(\cdot\ \text{equal})$, which make Fisher's combination of discrete p-values approximately exact rather than conservative \citep{Lancaster1961,Hwang2001}. In contrast to an ad hoc combination of ORA and proximity scores, the decomposition separates the two sources of evidence into independent tests, so that each enriched gene set can be attributed to \emph{overlap only}, \emph{network only}, \emph{both}, or neither component alone (\emph{joint}).
+
+The symmetric module-to-module statistic of NetFunrankR v1 and the drug--disease proximity of \citet{Guney2016} are special cases: both use $d_c$-type distances with a Monte-Carlo degree-binned null summarised by a $z$-score and a normal approximation, $p = \Phi(z)$; the hypergeometric ORA is recovered from $p_{\mathrm{overlap}}$ when all genes fall into a single bin and $n \ll |V|$.
+
+\subsection{Saddlepoint approximation for long query lists}
+For query lists with more than $n_{\mathrm{exact}} = 500$ network genes (e.g.\ differential-expression lists), the $O(n^2)$ convolutions are replaced by the second continuity-corrected Lugannani--Rice saddlepoint approximation for lattice variables \citep{Daniels1987}. With cumulant generating function $K(t) = \sum_j m_j \log \sum_\delta f_{Y,j}(\delta)\, e^{t\delta}$, the upper tail is
+\begin{equation}
+P(S \ge k) \approx 1 - \Phi(\tilde w) - \phi(\tilde w)\left(\frac{1}{\tilde w} - \frac{1}{\tilde u}\right),\quad
+K'(\hat t) = k - \tfrac12,\quad
+\tilde w = \mathrm{sgn}(\hat t)\sqrt{2\{\hat t (k - \tfrac12) - K(\hat t)\}},\quad
+\tilde u = 2\sinh(\hat t/2)\sqrt{K''(\hat t)},
+\end{equation}
+and lower tails are obtained from the reflected kernels. The same approximation is applied to $O$ and $S'$. Across all KEGG pathways and query sizes of 100--400 genes, saddlepoint and exact p-values differed by at most $0.02$ on the $\log_{10}$ scale (Supplementary Figure~S1).
+
+\subsection{Multiple testing and output}
+Each p-value type is adjusted across gene sets with the Benjamini--Hochberg procedure. Gene sets with fewer than 5 (and, for benchmarks, more than 500) members in the network are not tested. For every gene set NetFunrankR reports the observed and expected overlap, observed and expected $d_c$, standardized effect sizes $z = (\mathrm{E}_{H_0}[S] - S)/\mathrm{SD}_{H_0}[S]$ (computed from the bin-wise cumulants), the five p-values ($p_{\mathrm{overlap}}$, $p_{\mathrm{linker}}$, $p_{\mathrm{beyond}}$, $p_{\mathrm{prox}}$, $p_{\mathrm{combined}}$) with their FDRs, the hypergeometric ORA p-value for reference, the evidence class, and the overlapping and linker genes with the observed and expected linker counts.
+
+\subsection{Compared methods}\label{sec:competitors}
+For gene-list input we compared NetFunrankR with: (i) \textbf{ORA}, one-sided hypergeometric test with all genes annotated in the library as background \citep{Huang2009}; (ii) \textbf{NEA}, network enrichment analysis counting query--set edges against the configuration-model expectation $\sum_{x} k_x \sum_{y} k_y / 2|E|$ with a $z$-score \citep{Alexeyenko2012}; (iii) \textbf{RWR}, network propagation by random walk with restart (restart probability 0.5) from the query genes, scoring each set by its mean visiting probability, with a degree-binned permutation null (200 permutations), analogous to EnrichNet \citep{Glaab2012} and propagation-based enrichment \citep{Cowen2017}; (iv) \textbf{Proximity-$z$}, the closest-distance proximity of \citet{Guney2016} with 1{,}000 degree-binned permutations and normal p-values; and (v) \textbf{NetFunrankR-v1}, the symmetric module-to-module distance $d_{XY}$ used in v1, re-implemented with a correct degree-binned null. All network methods used the same interactome. For expression data we additionally ran the nine set-based methods implemented in EnrichmentBrowser \citep{Geistlinger2016}: ORA, CAMERA \citep{Wu2012}, GSVA \citep{Hanzelmann2013}, GlobalTest \citep{Goeman2004}, SAFE \citep{Barry2005}, GSEA \citep{Subramanian2005}, PADOG \citep{Tarca2012}, ROAST \citep{Wu2010} and SAMGS \citep{Dinu2007} (1{,}000 sample permutations for permutation-based methods).
+
+\subsection{Benchmark design}
+\paragraph{Type-I error calibration.}\label{sec:calib_methods}
+Random query lists of $n \in \{20, 50, 100, 200\}$ genes were drawn from the network either uniformly or with probability proportional to degree (hub-biased lists, mimicking the hub and study bias of real disease-gene lists; \citealp{Haynes2018}); 200 lists per setting. All methods were applied to the 320 KEGG 2021 pathways (Enrichr), and we recorded the nominal false-positive rate at $\alpha = 0.05$ and the fraction of null lists yielding at least one FDR-significant pathway.
+
+\paragraph{Power under incomplete annotation.}
+For 100 randomly chosen KEGG pathways with 50--200 network genes, a fraction $h \in \{0, 0.25, 0.5, 0.75, 0.9\}$ of the pathway's genes was removed from the tested annotation, simulating annotation incompleteness. A query of 50 genes contained $k = sn$ genes drawn from the \emph{complete} pathway ($s \in \{0.1, 0.2, 0.4\}$) and $n - k$ random non-pathway genes. We recorded the proportion of simulations in which the target pathway reached FDR $< 0.05$ (power) and its rank. Because the interactome excludes the curated-database and text-mining channels, hidden members cannot be re-identified through edges derived from KEGG itself.
+
+\paragraph{GSEABenchmarkeR (expression data).}
+We used the GEO2KEGG compendium of 42 microarray datasets with phenotype-relevance rankings of KEGG pathways derived from MalaCards \citep{Geistlinger2021}. Expression data were summarised to Entrez genes (\texttt{maPreproc}), differential expression was computed with limma using the benchmark's flexible multiple-testing rule (\texttt{runDE}), and KEGG gene sets (5--500 measured genes) were obtained with EnrichmentBrowser. Gene-list methods used the genes with adjusted $p < 0.05$, exactly the input of EnrichmentBrowser's ORA; NetFunrankR used the measured genes as background $\mathcal{U}$. Performance was quantified by the relevance score, i.e.\ the MalaCards-weighted sum of rank percentiles of the relevant pathways expressed as a percentage of the optimal score (\texttt{evalRelevance}, \texttt{compOpt}), the number of significant sets and the runtime.
+
+\paragraph{GWAS gene lists.}
+For the diseases with MalaCards relevance rankings, query lists were the genes mapped to genome-wide significant associations ($p \le 5\times10^{-8}$; GWAS Catalog, \citealp{Sollis2023}) of the matching EFO trait (Supplementary Table~S1). Three gold standards were used: (i) MalaCards relevance as above; (ii) the rank of the disease's own KEGG disease pathway (e.g.\ \textit{Alzheimer disease} for Alzheimer's disease GWAS), in the spirit of the target-pathway benchmark of \citet{Tarca2012}; and (iii) a \emph{temporal} validation that does not rely on curated disease--pathway associations: each disease's genes were split at the median date of first report into \emph{early} and \emph{late} genes, methods were applied to the early genes only, and their pathway rankings were evaluated (AUROC, AUPRC) against the pathways over-represented among the late genes (hypergeometric $p < 0.01$, late genes not in the early list). This asks whether a method applied to today's gene list anticipates the pathways implicated by tomorrow's discoveries.
+
+\paragraph{Robustness.}\label{sec:robust}
+The GWAS benchmark was repeated with (a) alternative interactomes (STRING noKB $\ge 0.7$, full-evidence STRING $\ge 0.7$), (b) random removal of 10, 25 and 50\% of edges, (c) degree-preserving rewiring of the network (negative control; three replicates each), and (d) minimum degree-bin sizes of 50 and 250. Stability was assessed by drawing 20 random halves of each GWAS list and computing the Jaccard index between the top-20 pathways of the half and of the full list.
+
+\paragraph{Case study.}
+The 307 COPD genes of \citet{MorselliGysi2021} (bundled with the package) were analysed against KEGG. Agreement with MalaCards COPD relevance was evaluated for all methods and for random subsets of 6--50 genes, and pathway rankings were compared with CAMERA results on an independent COPD expression dataset (GSE42057, part of GEO2KEGG).
+
+\subsection{Implementation and availability}
+NetFunrankR v2 is an R package (R $\ge 4.1$) with the convolution kernel implemented in C++ (Rcpp). Interactome distances for a library are computed once (2.8\,s for KEGG on a laptop) and reused across queries; a complete KEGG analysis of a 300-gene query takes about 2\,s on one core. The package bundles the STRING v12 networks described above, KEGG, Reactome and WikiPathways libraries, and provides the evidence map, null-distribution and linker-network visualizations used in this paper. All benchmark code is in \texttt{analysis/} of the repository (\url{https://github.com/Akmazad/NetFunrankR}).

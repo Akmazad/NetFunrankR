@@ -1,5 +1,5 @@
 ---
-title: "NetFunrankR"
+title: "NetFunrankR: decomposed network-proximity enrichment"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{NetFunrankR}
@@ -7,273 +7,91 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  fig.width = 15,
-  fig.height = 12,
-  fig.align = "center",
-  dpi = 144,
-  out.width = "100%"
-)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 5.5, fig.align = "center",
+                      dpi = 100, out.width = "100%")
 ```
 
-# NetFunrankR Wrapper Tutorial
+NetFunrankR tests whether a gene list is *closer* to a pathway in the
+protein-protein interaction (PPI) network than degree-matched random genes,
+and splits that evidence into
 
-This vignette demonstrates how to use the `NetFunrankR` package for network-proximity empowered functional enrichment test and comparative performance with `hypergeometric distribution` based over-representation test - with the `NetFunrankR_wrapper`.
+* **overlap**: query genes annotated to the pathway (degree-aware test), and
+* **beyond overlap**: query genes *not* annotated to the pathway but close to
+  its members in the network.
 
-## Overview
+Both parts are tested against exact (permutation-free) null distributions and
+combined with Fisher's method; the two p-values are independent under the
+null, so the combination is valid.
 
-The `NetFunrankR_wrapper` function performs two types of pathway enrichment analyses: - **ORA**: Traditional over-representation analysis (hypergeometric test) - **TW**: Topology-aware network proximity analysis
+## Quick start
 
-Results include Reports (CSV files) with ranked pathways and comparative visualization (ggplot2 object and PDFs).
-
-## Installation
-
-Ensure required dependencies are installed:
-
-    ```{r}
-    # devtools::install_github("Akmazad/NetFunrankR")
-    ```
-
-
-## Basic Usage
-
-### Load Package
-
-```{r message=F, warning=F}
-library(dplyr)
-library(data.table)
-library(ggplot2)
+```{r}
 library(NetFunrankR)
-outdir <- "./NetFunrankR_results/"
+
+net  <- string_network("noKB")   # STRING v12 without database/text-mining channels
+kegg <- load_pathways("KEGG")
+net
 ```
-
-```{r theme-myvignette, include=FALSE}
-library(ggplot2)
-
-theme_myvignette <- function(base_size = 8, base_family = "sans") {
-  theme_minimal(base_size = base_size, base_family = base_family) +
-    theme(
-      plot.title = element_text(size = rel(1.4), face = "bold", hjust = 0.5),
-      plot.subtitle = element_text(size = rel(1.1), hjust = 0.5),
-      axis.title = element_text(size = rel(1.1)),
-      axis.text = element_text(size = rel(1)),
-      legend.title = element_text(size = rel(1.1)),
-      legend.text = element_text(size = rel(1)),
-      plot.margin = margin(10, 10, 10, 10),
-      panel.grid.major = element_line(color = "gray80", size = 0.2),
-      panel.grid.minor = element_blank()
-    )
-}
-
-theme_set(theme_myvignette())
-```
-
-### Load example disease genes
-
-The package comes with an example vector of disease genes (COPD) named example_enrich.df. Let's observe the head of this data..
-
-```{r, message=F, warning=F}
-print(head(COPD_proteinCodingGenes))
-```
-
-### Perform analysis
-
-With the given disease genes, a wrapper function (`NetFunrankR_wrapper`) can be invoked to run the whole analysis, and the results (reports, plots - both pdf and ggplot2 objects) are saved in a given directory (default: `./NetFunrankR_Results/`).
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-NetFunrankR_wrapper(
-  disease_genes = COPD_proteinCodingGenes,
-  PathwayRanker_Type = "Both",
-  nPermute = 10,
-  outdir = outdir
-)
-```
-
-### Check results
-
-#### Number of significantly enriched terms/pathways
-
-This venn diagram shows counts of significantly enriched terms/pathways by the two methods
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-load(paste0(outdir, "CommonFunctions_ORA_TW.vennplt.obj.RData"))
-common.terms.vennplt.obj
-```
-
-#### Significantly enriched terms/pathways
-
-This plot shows the terms/pathways that are significantly enriched (`pvalue < 0.05`) and commonly found between Network-Proximity based and Over-representation based methods
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-load(paste0(outdir,"CommonFunctions_ORA_TW.barplt.obj.RData"))
-common.terms.barplt.obj
-```
-
-#### Exclusive terms/pathways found by ORA
-
-This plot shows the terms/pathways that are exclusively enriched (`pvalue < 0.05`) via ORA method
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-load(paste0(outdir,"Only_ORA_terms.plt.obj.RData"))
-only_ORA_terms.plt.obj
-```
-
-#### Exclusive terms/pathways found by TW
-
-This plot shows the terms/pathways that are exclusively enriched (`pvalue < 0.05`) via TW method
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-load(paste0(outdir,"Only_TW_terms.plt.obj.RData"))
-only_TW_terms.plt.obj
-```
-
-### Further configuration of results
-
-The enrichment results from both the methods can be further controlled based on filtering `p.adjust < 0.05` instead of the nominal `pvalue`.
 
 ```{r}
-    rankedPathways_ORA <- fread(paste0(outdir,"KEGG_PE_ORA_result.csv"))
-    rankedPathways_TW <- fread(paste0(outdir,"KEGG_PE_TopoAw_result.csv"))
-    rankedPathways_ORA_filt <- rankedPathways_ORA %>% dplyr::filter(p.adjust < 0.05)
-    rankedPathways_TW_filt <- rankedPathways_TW  %>% dplyr::filter(p.adjust < 0.05)
+res <- nf_proximity_test(COPD_proteinCodingGenes, kegg, net, max_size = 500)
+res$evidence <- nf_evidence_class(res)
+head(res[, c("set", "overlap", "overlap_expected", "d_c", "d_c_expected",
+             "p_overlap", "p_beyond", "p_combined", "fdr_combined", "evidence")], 10)
+table(res$evidence)
 ```
 
-Then the results can be visualized accordingly.
+Columns:
 
-```{r fig.width=12, fig.height=10, fig.align='center', message=F, warning=F}
-library(ggvenn)
-library(tidyr)
-library(forcats)
-library(ggplot2)
-library(cowplot)
+| column | meaning |
+|---|---|
+| `overlap`, `overlap_expected` | observed and degree-expected number of query genes in the set |
+| `d_c`, `d_c_expected` | mean shortest-path distance from query genes to the set |
+| `p_overlap` | degree-aware overlap test (Poisson-binomial) |
+| `p_beyond` | proximity of non-member query genes, conditional on the overlap |
+| `p_proximity` | total closest-distance proximity |
+| `p_combined` | Fisher combination of `p_overlap` and `p_beyond` |
+| `p_hyper` | classical hypergeometric ORA, for reference |
+| `linker_genes` | query genes adjacent to (but not in) the set |
 
-# venn diagram
-p1 <- plot_venn(
-        vec1 = rankedPathways_ORA_filt %>% dplyr::pull(Description),
-        vec2 = rankedPathways_TW_filt %>% dplyr::pull(Description))
-# double-bar plot
-p2 <- inner_join(
-        rankedPathways_ORA_filt,
-        rankedPathways_TW_filt,
-        by = "Description") %>%
-  plot_double_bar()
-# exclusive ORA 
-p3 <- anti_join(
-        rankedPathways_ORA_filt,
-        rankedPathways_TW_filt,
-        by = c("Description" = "Description")) %>%
-  plot_lollipop(color_palette = c("#616530FF", "#dce58f"))
-# exclusive TW
-p4 <- anti_join(
-        rankedPathways_TW_filt,
-        rankedPathways_ORA_filt,
-        by = c("Description" = "Description")) %>%
-  plot_lollipop(color_palette = c("#CC8214FF", "#f6e8b1"))
-p1_p2 <- plot_grid(p1,p2,
-                            labels = c("a","b"),
-                            rel_heights = c(5,6),
-                            ncol = 1)
-final_plot <- plot_grid(p1_p2,p3,p4,
-                   # rel_heights = c(1,1),
-                   rel_widths = c(1,1,1),
-                   labels = c("", "c", "d"), 
-                   ncol = 3,
-                   align = "l"
-                   )
-# Display the combined plot
-  ggsave(paste0(outdir,"all_plots_combined.pdf"), 
-         plot = final_plot, 
-         # device = cairo_pdf, 
-         width = 20, height = 10, units = "in")
-  final_plot
-```
-
-### Performance analysis on smaller input
-
-With the given disease genes, a wrapper function (`NetFunrankR_wrapper`) can be invoked to run the whole analysis, and the results (reports, plots - both pdf and ggplot2 objects) are saved in a given directory (default: `./NetFunrankR_Results_small/`).
-
-```{r out.width="100%", out.height="100%", message=F, warning=F}
-outdir <- "./NetFunrankR_Results_small/"
-NetFunrankR_wrapper(
-  disease_genes = COPD_proteinCodingGenes %>% base::sample(size = 6, replace = FALSE),
-  PathwayRanker_Type = "Both",
-  nPermute = 10,
-  outdir = outdir
-)
-
-```
-
-We want to observe if the Network-proximity based enrichment test (TW) performs better than ORA when the input genesets are random and small-sized.
+## Plots
 
 ```{r}
-    rankedPathways_ORA <- fread(paste0(outdir,"KEGG_PE_ORA_result.csv"))
-    rankedPathways_TW <- fread(paste0(outdir,"KEGG_PE_TopoAw_result.csv"))
-    rankedPathways_ORA_filt <- rankedPathways_ORA %>% dplyr::filter(Count > 0) %>% # this is important as sometimes functions with 0 overlap gets a nominal p-value
-      dplyr::filter(pvalue < 0.05)
-    rankedPathways_TW_filt <- rankedPathways_TW  %>% dplyr::filter(pvalue < 0.05)
+plot_evidence_map(res)
 ```
 
-Then the results can be visualized accordingly.
-
-```{r fig.width=12, fig.height=10, fig.align='center', message=F, warning=F}
-library(ggvenn)
-library(tidyr)
-library(forcats)
-library(ggplot2)
-library(cowplot)
-
-# venn diagram
-p1 <- plot_venn(
-        vec1 = rankedPathways_ORA_filt %>% dplyr::pull(Description),
-        vec2 = rankedPathways_TW_filt %>% dplyr::pull(Description))
-# double-bar plot
-p2 <- dplyr::inner_join(
-        rankedPathways_ORA_filt,
-        rankedPathways_TW_filt,
-        by = "Description") %>%
-  plot_double_bar()
-# exclusive ORA 
-p3 <- dplyr::anti_join(
-        rankedPathways_ORA_filt,
-        rankedPathways_TW_filt,
-        by = c("Description" = "Description")) %>%
-  plot_lollipop(color_palette = c("#616530FF", "#dce58f"))
-# exclusive TW
-p4 <- dplyr::anti_join(
-        rankedPathways_TW_filt,
-        rankedPathways_ORA_filt,
-        by = c("Description" = "Description")) %>%
-  plot_lollipop(color_palette = c("#CC8214FF", "#f6e8b1"))
-p1_p2 <- cowplot::plot_grid(p1,p2,
-                            labels = c("a","b"),
-                            rel_heights = c(5,6),
-                            ncol = 1)
-final_plot <- cowplot::plot_grid(p1_p2,p3,p4,
-                   # rel_heights = c(1,1),
-                   rel_widths = c(1,1,1),
-                   labels = c("", "c", "d"), 
-                   ncol = 3,
-                   align = "l"
-                   )
-# Display the combined plot
-  ggsave(paste0(outdir,"all_plots_combined.pdf"), 
-         plot = final_plot, 
-         # device = cairo_pdf, 
-         width = 20, height = 10, units = "in")
-  final_plot
+```{r}
+top <- res$set[res$evidence == "network only"][1]
+if (!is.na(top)) plot_linker_network(COPD_proteinCodingGenes, kegg[[top]], net) +
+  ggplot2::ggtitle(top)
 ```
 
-# Conclusion
+```{r}
+nd <- nf_null_distribution(COPD_proteinCodingGenes, kegg, net, res$set[1])
+plot_null(nd, "S", title = res$set[1])
+```
 
-In this vignette, we demonstrated the basic functionality of the NetFunrankR package. We loaded example disease genes, performed both Over-representation (ORA) and topology-aware (TW) network-proximity methods for functional term/pathway enrichment, compare, report and visualize results. For more detailed analysis, refer to the package documentation.
+## Many queries, custom networks and backgrounds
 
-# References
+Distances from every node to every gene set are computed once per library and
+can be reused:
 
--   Network proximity method: Menche et al., Science (2015)
--   STRING DB: <https://string-db.org>
--   ORA implementation: clusterProfiler (Yu et al., 2012)
+```{r, eval = FALSE}
+D <- set_distances(net, kegg)
+lapply(my_gene_lists, nf_proximity_test, genesets = kegg, net = net, D = D)
+```
 
-------------------------------------------------------------------------
+Any edge list can be used as network (`nf_network(edges)`). For expression
+data, pass the measured genes as `background` so that null genes are drawn
+only from genes that could have been called differentially expressed.
 
-*For detailed methodology, see package documentation: `?NetFunrankR_wrapper`*
+## One-call wrapper
+
+```{r, eval = FALSE}
+NetFunrankR_wrapper(COPD_proteinCodingGenes, PE_ORA_pop = "KEGG",
+                    outdir = "NetFunrankR_results")
+```
+
+writes the result table and the evidence map, Venn diagram, comparison and
+linker-network plots (PDF and ggplot2 objects).

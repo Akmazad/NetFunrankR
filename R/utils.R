@@ -1,165 +1,102 @@
-PathwayEnrichment_ORA <- function(
-    givenSet,
-    PE_ORA_pop,
-    pathway.data
-    # cutoff_col = "pvalue",
-    # cutoff_th = 0.05
-){
-  if(is.null(givenSet) ||
-     length(givenSet) == 0 )
-    stop("Pathway enrichment fails: it requires non-empty gene set")
-  if(is.null(pathway.data) ||
-     nrow(pathway.data) == 0)
-    stop("Pathway enrichment fails: it requires Pathway annotation data")
-
-  require(org.Hs.eg.db)
-  require(AnnotationDbi)
-  require(stringi)
-  require(dplyr)
-
-
-  # do the analysis -----
-  pathwayNames = pathway.data$PathwayName %>% unique()
-  nTerms <- pathwayNames %>% length()
-
-  # background population is the whole human genome (protein-coding genes only)
-  pop.genes <- get_all_human_protein_coding_genes()
-  N = length(pop.genes)
-
-  # enrichment test using HyperGeometric test
-  info.gene.overrep = data.frame(
-    matrix(NA, nrow = nTerms, ncol = 7))
-
-  K = length(givenSet)
-  for (i in 1:nTerms) {
-    # extract the genes in for a pathway
-    pathway.genes.symbol = pathway.data %>%
-      dplyr::filter(PathwayName == pathwayNames[i]) %>%
-      dplyr::pull(GeneSymbol)
-
-    # size of pathway gene set
-    M = length(pathway.genes.symbol)
-
-    # find the overlap
-    x.overlap.genes.symbol = intersect(pathway.genes.symbol, givenSet)
-
-    # size of the overlap
-    x = length(x.overlap.genes.symbol)
-    # if(x > 2){
-      info.gene.overrep[i,1] = pathwayNames[i]
-      info.gene.overrep[i,2] = paste0(pathway.genes.symbol, collapse = "/")
-      info.gene.overrep[i,3] = paste0(x.overlap.genes.symbol, collapse = "/")
-
-      x.overlap.genes.entrezID = ifelse(length(x.overlap.genes.symbol) > 0,
-                                        mapIds(keys = x.overlap.genes.symbol, keytype  = "SYMBOL",
-                                               column  = "ENTREZID",
-                                               multiVals = "first",
-                                               x = org.Hs.eg.db) %>% unname(),
-                                        "")
-
-      info.gene.overrep[i,4] = paste0(x.overlap.genes.entrezID, collapse = "/")
-      info.gene.overrep[i,5] = x
-      info.gene.overrep[i,6] = x/M
-
-      info.gene.overrep[i,7] = phyper(x, M, N-M, K, lower.tail = FALSE) #He wrote : overlap.genes-1
-    # }
-  }
-  # set the column names of the result
-  colnames(info.gene.overrep) = c("Description",
-                                  "Pathway.geneSymbol",
-                                  "Overlapping.geneSymbol",
-                                  "Overlapping.geneID",
-                                  "Count", "GeneRatio",
-                                  "pvalue")
-  info.gene.overrep = info.gene.overrep %>%
-    # dplyr::filter(pvalue != Inf) %>%
-    dplyr::mutate("p.adjust" = p.adjust(pvalue,
-                                        method = "fdr"
-                                        # n = nrow(.)))
-                                        ))
-  res <- info.gene.overrep #%>%
-    # dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
-    # dplyr::arrange(!!dplyr::sym(cutoff_col))
-
-  return(res)
-
+#' Load a built-in pathway library as a named gene-set list
+#'
+#' @param db one of "KEGG", "Reactome", "WikiPathways".
+#' @returns named list of gene symbol vectors.
+#' @export
+load_pathways <- function(db = c("KEGG", "Reactome", "WikiPathways")) {
+  db <- match.arg(db)
+  obj <- switch(db,
+                KEGG = "KEGG_2021_Human",
+                Reactome = "Reactome_Pathways_2024",
+                WikiPathways = "WikiPathways_2024_Human")
+  env <- new.env()
+  utils::data(list = obj, package = "NetFunrankR", envir = env)
+  as_geneset_list(get(obj, envir = env))
 }
 
-PathwayEnrichment_TopoAw <- function(
-    givenSet,
-    pathway.data,
-    string_PPI_score_th,
-    nPermute
-    # cutoff_col = "p.adjust",
-    # cutoff_th = 0.05
-){
-  if(is.null(pathway.data) ||
-     nrow(pathway.data) == 0)
-    stop("Pathway enrichment fails: it requires Pathway annotation data")
-
-  # do the analysis -----
-  pathwayNames = pathway.data$PathwayName %>% unique()
-  nTerms <- pathwayNames %>% length()
-
-
-  info.Pathway.network.proximity = data.frame(
-    matrix(NA, nrow = nTerms, ncol = 4))
-
-  for (i in 1:nTerms) {
-  # for (i in 1:2) {
-    pathwayname <- pathwayNames[i]
-
-    # extract the genes in for a pathway
-    pathway.genes.symbol = pathway.data %>%
-      dplyr::filter(PathwayName == pathwayNames[i]) %>%
-      dplyr::pull(GeneSymbol)
-
-    # get network proximity score
-    netP.scores <- quantify_network_proximity_score(
-      string_PPI_score_th = string_PPI_score_th,
-      module_a = givenSet,
-      module_b = pathway.genes.symbol,
-      nPermute = nPermute)
-
-    # save the data
-    info.Pathway.network.proximity[i,1] = pathwayname
-    info.Pathway.network.proximity[i,2] = netP.scores[1] # observed distance
-    info.Pathway.network.proximity[i,3] = netP.scores[2] # z-score
-    info.Pathway.network.proximity[i,4] = netP.scores[3] # p-value
-
-    cat(paste0("[",i,"] ", pathwayname, ": ",
-               "; observed dis: ", netP.scores[1], " ",
-               "; z-score: ", netP.scores[2], " ",
-               "; pval: ", netP.scores[3], "\n"
-    ))
-  }
-  # set the column names of the result
-  colnames(info.Pathway.network.proximity) = c("Description",
-                                  "observed_proximity",
-                                  "z_score",
-                                  "pvalue")
-  info.Pathway.network.proximity = info.Pathway.network.proximity %>%
-    # dplyr::filter(pvalue != Inf) %>%
-    dplyr::mutate("p.adjust" = p.adjust(pvalue,
-                                        method = "fdr"
-                                        # n = nrow(.)))
-                                        ))
-  res <- info.Pathway.network.proximity #%>%
-    # dplyr::filter(!!dplyr::sym(cutoff_col) < cutoff_th) %>%
-    # dplyr::arrange(!!dplyr::sym(cutoff_col))
-
-  return(res)
+#' Built-in STRING v12 interactome
+#'
+#' @param evidence "noKB" (default) recomputes the STRING combined score
+#'   without the curated-database and text-mining channels, so that the
+#'   network is not derived from the pathway annotations being tested;
+#'   "all" uses the published combined score.
+#' @param score_th minimum score (0-1000). Defaults: 400 for "noKB",
+#'   700 for "all" (similar network size, ~16,000 proteins).
+#' @param ... passed to \code{\link{nf_network}}.
+#' @returns an \code{nf_network}.
+#' @export
+string_network <- function(evidence = c("noKB", "all"), score_th = NULL, ...) {
+  evidence <- match.arg(evidence)
+  env <- new.env()
+  utils::data("STRING_v12_PPI", package = "NetFunrankR", envir = env)
+  ppi <- env$STRING_v12_PPI
+  col <- if (evidence == "noKB") "nokb_score" else "combined_score"
+  if (is.null(score_th)) score_th <- if (evidence == "noKB") 400 else 700
+  if (score_th < 400 && evidence == "noKB")
+    warning("bundled noKB edges are only complete for score >= 400")
+  nf_network(ppi[ppi[[col]] >= score_th, c("from", "to")], ...)
 }
 
-get_all_human_protein_coding_genes <- function(){
-  require(EnsDb.Hsapiens.v75)
+#' Over-representation analysis (hypergeometric test)
+#'
+#' One-sided test \eqn{P(X \ge x)} for the overlap between the query genes
+#' and every gene set, against a common background.
+#'
+#' @param query character vector of query genes.
+#' @param genesets named list of gene vectors or an annotation data.frame.
+#' @param universe background genes; default is every gene annotated in
+#'   \code{genesets} (as in clusterProfiler/DAVID).
+#' @param min_size,max_size size limits (genes in the universe).
+#' @param p_adjust multiple-testing method.
+#' @returns data.frame ordered by p-value.
+#' @export
+nf_ora <- function(query, genesets, universe = NULL,
+                   min_size = 5L, max_size = Inf, p_adjust = "BH") {
+  genesets <- as_geneset_list(genesets)
+  if (is.null(universe)) universe <- unique(unlist(genesets, use.names = FALSE))
+  q <- intersect(unique(query), universe)
+  N <- length(universe)
+  n <- length(q)
+  res <- lapply(names(genesets), function(s) {
+    Y <- intersect(genesets[[s]], universe)
+    M <- length(Y)
+    ov <- intersect(q, Y)
+    x <- length(ov)
+    data.frame(set = s, set_size = M, overlap = x,
+               expected = n * M / N,
+               gene_ratio = if (M > 0) x / M else NA_real_,
+               pvalue = stats::phyper(x - 1L, M, N - M, n, lower.tail = FALSE),
+               overlap_genes = paste(ov, collapse = "/"),
+               stringsAsFactors = FALSE)
+  })
+  res <- do.call(rbind, res)
+  res <- res[res$set_size >= min_size & res$set_size <= max_size, ]
+  res$p.adjust <- stats::p.adjust(res$pvalue, method = p_adjust)
+  res <- res[order(res$pvalue), ]
+  rownames(res) <- NULL
+  res
+}
 
-  edb <- EnsDb.Hsapiens.v75
-  edb %>%
-    AnnotationDbi::select(.,
-                          keys=keys(edb, keytype="SYMBOL"),
-                          columns=c("TXBIOTYPE"), keytype="SYMBOL") %>%
-    dplyr::filter(TXBIOTYPE == "protein_coding") %>%
-    dplyr::pull(SYMBOL) %>% unique() %>%
-    return()
+#' Exact null distribution of the proximity statistics for one gene set
+#'
+#' Returns the probability mass functions used by
+#' \code{\link{nf_proximity_test}} for a single set, e.g. for plotting.
+#'
+#' @inheritParams nf_proximity_test
+#' @param set name of the gene set.
+#' @returns list with observed values and pmfs of the overlap (\code{O}),
+#'   total distance (\code{S}) and beyond-overlap distance (\code{Sb}).
+#' @export
+nf_null_distribution <- function(query, genesets, net, set) {
+  genesets <- as_geneset_list(genesets)[set]
+  d <- set_distances(net, genesets)[, 1]
+  qi <- which(net$genes %in% query)
+  B <- max(net$bin)
+  cnt <- matrix(tabulate(d * B + net$bin, nbins = B * (max(d) + 1L)), nrow = B)
+  f <- cnt / pmax(rowSums(cnt), 1)
+  member <- d[qi] == 0L
+  pm <- exact_null_cpp(f, tabulate(net$bin[qi], nbins = B),
+                       tabulate(net$bin[qi][!member], nbins = B))
+  c(pm, list(n = length(qi), overlap = sum(member), S_obs = sum(d[qi]),
+             d_query = stats::setNames(d[qi], net$genes[qi])))
 }

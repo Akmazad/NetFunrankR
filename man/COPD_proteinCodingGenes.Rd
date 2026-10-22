@@ -5,13 +5,10 @@
 \alias{COPD_proteinCodingGenes}
 \title{COPD_proteinCodingGenes}
 \format{
-A vector:
-\describe{
-\item{\code{value}}{Hugo Gene symbol}
-}
+A character vector of HGNC gene symbols.
 }
 \source{
-<https://doi.org/10.1073/pnas.2301342120>
+Morselli Gysi et al. (2021) <https://doi.org/10.1073/pnas.2025581118>
 }
 \usage{
 COPD_proteinCodingGenes
