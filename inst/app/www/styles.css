@@ -1,0 +1,113 @@
+/* NetFunrankR dashboard styles. Colours come from Bootstrap CSS variables so
+   that light and dark mode both work. */
+
+.nfr-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.bslib-sidebar-layout > .sidebar .accordion-button {
+  font-weight: 600;
+}
+
+.nfr-welcome .lead {
+  font-size: 1.1rem;
+}
+
+.nfr-step {
+  position: relative;
+  text-align: left;
+  border: 1px solid var(--bs-border-color);
+  box-shadow: none;
+}
+
+.nfr-step-num {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--bs-tertiary-color);
+}
+
+/* evidence-class label: coloured dot + text (identity never colour-only) */
+.nfr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0.55rem 0.1rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--bs-border-color);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.nfr-pill::before {
+  content: "";
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--pill);
+}
+
+.nfr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.nfr-chip {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.78rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.35rem;
+  background: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+.nfr-stat {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--bs-border-color);
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+.nfr-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+}
+
+.nfr-clickable {
+  cursor: pointer;
+}
+
+.nfr-prose {
+  max-width: 50rem;
+  line-height: 1.6;
+}
+
+.nfr-prose li {
+  margin-bottom: 0.35rem;
+}
+
+pre.shiny-text-output {
+  max-height: 32rem;
+  font-size: 0.82rem;
+}
+
+.value-box-title {
+  font-size: 0.9rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

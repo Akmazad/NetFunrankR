@@ -7,3 +7,7 @@
 ^analysis$
 ^NetFunrankR_results$
 ^copd genes\.csv$
+^deploy$
+^\.dockerignore$
+^\.github$
+^hf-space$

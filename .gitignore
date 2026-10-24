@@ -24,3 +24,4 @@ analysis/manuscript/*.log
 analysis/manuscript/*.bbl
 analysis/manuscript/*.blg
 analysis/manuscript/*.out
+hf-space/

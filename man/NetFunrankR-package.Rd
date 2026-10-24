@@ -4,12 +4,44 @@
 \name{NetFunrankR-package}
 \alias{NetFunrankR}
 \alias{NetFunrankR-package}
-\title{NetFunrankR: Decomposed Network-Proximity Functional Enrichment Analysis}
+\title{NetFunrankR: decomposed network-proximity functional enrichment}
 \description{
-Functional enrichment analysis of gene lists using shortest-path network proximity in a protein-protein interaction network. The proximity of a query gene list to each gene set is decomposed into a degree-aware overlap component and a beyond-overlap network component, both tested against exact (permutation-free) degree-preserving null distributions obtained by discrete convolution, and combined with Fisher's method. Classical over-representation analysis, permutation-based proximity (symmetric and closest distance) and diagnostic plots are included.
+Tests whether a gene list is closer to each pathway in a protein
+interaction network than degree-matched random genes and decomposes the
+evidence into a degree-aware overlap test and beyond-overlap (linker and
+distance) tests of the non-member genes. All null distributions are
+exact; no permutations are needed.
+}
+\details{
+Main functions:
+\itemize{
+  \item \code{\link{stringNetwork}}, \code{\link{buildNetwork}}:
+    prepare an interactome (\code{\linkS4class{NFNetwork}}).
+  \item \code{\link{loadPathways}}, \code{\link{asGeneSetList}},
+    \code{\link{readGMT}}: gene-set libraries.
+  \item \code{\link{netEnrich}}, \code{\link{netEnrichBatch}}: the test
+    (\code{\linkS4class{NFResult}}).
+  \item \code{\link{evidenceClass}}, \code{\link{plotEvidenceMap}},
+    \code{\link{plotTopSets}}, \code{\link{plotLinkerNetwork}}:
+    interpretation.
+  \item \code{\link{runNetFunrankRApp}}: interactive dashboard.
+}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Akmazad/NetFunrankR}
+  \item Report bugs at \url{https://github.com/Akmazad/NetFunrankR/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: AKM Azad \email{kazad@imamu.edu.sa}
+\strong{Maintainer}: AKM Azad \email{kazad@imamu.edu.sa} (\href{https://orcid.org/0000-0002-5251-2214}{ORCID})
+
+Authors:
+\itemize{
+  \item Mohammad Ali Moni \email{m.moni@uq.edu.au}
+}
 
 }
 \keyword{internal}

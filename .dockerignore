@@ -1,0 +1,13 @@
+analysis
+NetFunrankR_results
+tests
+vignettes
+.git
+.Rproj.user
+.RData
+.Rhistory
+*.Rproj
+src/*.o
+src/*.so
+src/*.dll
+copd genes.csv

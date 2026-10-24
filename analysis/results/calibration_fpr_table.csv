@@ -2,88 +2,88 @@ method,scheme,size,fpr,family
 ORA,Hub-biased random lists,20,0.0245754716981132,Annotation / expression
 NEA,Hub-biased random lists,20,0.074559748427673,Network (published)
 RWR,Hub-biased random lists,20,0.0510062893081761,Network (published)
-Proximity-z,Hub-biased random lists,20,0.063003144654088,Network (published)
-NetFunrankR-v1,Hub-biased random lists,20,0.0693081761006289,Network (published)
+Proximity-closest,Hub-biased random lists,20,0.063003144654088,Network (published)
+Proximity-symmetric,Hub-biased random lists,20,0.0693081761006289,Network (published)
 ORA,Uniform random lists,20,0.0164937106918239,Annotation / expression
 NEA,Uniform random lists,20,0.156100628930818,Network (published)
 RWR,Uniform random lists,20,0.05,Network (published)
-Proximity-z,Uniform random lists,20,0.0488679245283019,Network (published)
-NetFunrankR-v1,Uniform random lists,20,0.0560849056603774,Network (published)
+Proximity-closest,Uniform random lists,20,0.0488679245283019,Network (published)
+Proximity-symmetric,Uniform random lists,20,0.0560849056603774,Network (published)
 ORA,Hub-biased random lists,50,0.0387264150943396,Annotation / expression
 NEA,Hub-biased random lists,50,0.0583647798742138,Network (published)
 RWR,Hub-biased random lists,50,0.0532075471698113,Network (published)
-Proximity-z,Hub-biased random lists,50,0.0565251572327044,Network (published)
-NetFunrankR-v1,Hub-biased random lists,50,0.0612893081761006,Network (published)
+Proximity-closest,Hub-biased random lists,50,0.0565251572327044,Network (published)
+Proximity-symmetric,Hub-biased random lists,50,0.0612893081761006,Network (published)
 ORA,Uniform random lists,50,0.0230345911949686,Annotation / expression
 NEA,Uniform random lists,50,0.189339622641509,Network (published)
 RWR,Uniform random lists,50,0.0496698113207547,Network (published)
-Proximity-z,Uniform random lists,50,0.0424842767295598,Network (published)
-NetFunrankR-v1,Uniform random lists,50,0.0571069182389937,Network (published)
+Proximity-closest,Uniform random lists,50,0.0424842767295598,Network (published)
+Proximity-symmetric,Uniform random lists,50,0.0571069182389937,Network (published)
 ORA,Hub-biased random lists,100,0.0541509433962264,Annotation / expression
 NEA,Hub-biased random lists,100,0.0575471698113208,Network (published)
 RWR,Hub-biased random lists,100,0.0513050314465409,Network (published)
-Proximity-z,Hub-biased random lists,100,0.057562893081761,Network (published)
-NetFunrankR-v1,Hub-biased random lists,100,0.0594654088050315,Network (published)
+Proximity-closest,Hub-biased random lists,100,0.057562893081761,Network (published)
+Proximity-symmetric,Hub-biased random lists,100,0.0594654088050315,Network (published)
 ORA,Uniform random lists,100,0.0286635220125786,Annotation / expression
 NEA,Uniform random lists,100,0.184040880503145,Network (published)
 RWR,Uniform random lists,100,0.0488993710691824,Network (published)
-Proximity-z,Uniform random lists,100,0.0460062893081761,Network (published)
-NetFunrankR-v1,Uniform random lists,100,0.0502672955974843,Network (published)
+Proximity-closest,Uniform random lists,100,0.0460062893081761,Network (published)
+Proximity-symmetric,Uniform random lists,100,0.0502672955974843,Network (published)
 ORA,Hub-biased random lists,200,0.0753301886792453,Annotation / expression
 NEA,Hub-biased random lists,200,0.0582704402515723,Network (published)
 RWR,Hub-biased random lists,200,0.050125786163522,Network (published)
-Proximity-z,Hub-biased random lists,200,0.0615094339622642,Network (published)
-NetFunrankR-v1,Hub-biased random lists,200,0.0596069182389937,Network (published)
+Proximity-closest,Hub-biased random lists,200,0.0615094339622642,Network (published)
+Proximity-symmetric,Hub-biased random lists,200,0.0596069182389937,Network (published)
 ORA,Uniform random lists,200,0.0331132075471698,Annotation / expression
 NEA,Uniform random lists,200,0.191619496855346,Network (published)
 RWR,Uniform random lists,200,0.0518710691823899,Network (published)
-Proximity-z,Uniform random lists,200,0.0560849056603774,Network (published)
-NetFunrankR-v1,Uniform random lists,200,0.057562893081761,Network (published)
-NFR-overlap,Hub-biased random lists,20,0.0139779874213836,NetFunrankR v2
-NFR-linker,Hub-biased random lists,20,0.0283333333333333,NetFunrankR v2
-NFR-distance,Hub-biased random lists,20,0.0347955974842767,NetFunrankR v2
-NFR-total,Hub-biased random lists,20,0.0358176100628931,NetFunrankR v2
-NFR-combined,Hub-biased random lists,20,0.0321540880503145,NetFunrankR v2
-NFR-combined-dist,Hub-biased random lists,20,0.0360534591194969,NetFunrankR v2
-NFR-overlap,Uniform random lists,20,0.0163207547169811,NetFunrankR v2
-NFR-linker,Uniform random lists,20,0.027751572327044,NetFunrankR v2
-NFR-distance,Uniform random lists,20,0.0385220125786164,NetFunrankR v2
-NFR-total,Uniform random lists,20,0.0406918238993711,NetFunrankR v2
-NFR-combined,Uniform random lists,20,0.0358333333333333,NetFunrankR v2
-NFR-combined-dist,Uniform random lists,20,0.0390723270440252,NetFunrankR v2
-NFR-overlap,Hub-biased random lists,50,0.0202987421383648,NetFunrankR v2
-NFR-linker,Hub-biased random lists,50,0.0361163522012579,NetFunrankR v2
-NFR-distance,Hub-biased random lists,50,0.0401100628930818,NetFunrankR v2
-NFR-total,Hub-biased random lists,50,0.0416981132075472,NetFunrankR v2
-NFR-combined,Hub-biased random lists,50,0.0433018867924528,NetFunrankR v2
-NFR-combined-dist,Hub-biased random lists,50,0.0425471698113208,NetFunrankR v2
-NFR-overlap,Uniform random lists,50,0.0188679245283019,NetFunrankR v2
-NFR-linker,Uniform random lists,50,0.0289465408805031,NetFunrankR v2
-NFR-distance,Uniform random lists,50,0.0392610062893082,NetFunrankR v2
-NFR-total,Uniform random lists,50,0.0397169811320755,NetFunrankR v2
-NFR-combined,Uniform random lists,50,0.0378301886792453,NetFunrankR v2
-NFR-combined-dist,Uniform random lists,50,0.0404874213836478,NetFunrankR v2
-NFR-overlap,Hub-biased random lists,100,0.0229559748427673,NetFunrankR v2
-NFR-linker,Hub-biased random lists,100,0.0438836477987421,NetFunrankR v2
-NFR-distance,Hub-biased random lists,100,0.0470911949685535,NetFunrankR v2
-NFR-total,Hub-biased random lists,100,0.0475,NetFunrankR v2
-NFR-combined,Hub-biased random lists,100,0.0462421383647799,NetFunrankR v2
-NFR-combined-dist,Hub-biased random lists,100,0.0472327044025157,NetFunrankR v2
-NFR-overlap,Uniform random lists,100,0.0204088050314465,NetFunrankR v2
-NFR-linker,Uniform random lists,100,0.0324528301886792,NetFunrankR v2
-NFR-distance,Uniform random lists,100,0.0477672955974843,NetFunrankR v2
-NFR-total,Uniform random lists,100,0.0488364779874214,NetFunrankR v2
-NFR-combined,Uniform random lists,100,0.0411320754716981,NetFunrankR v2
-NFR-combined-dist,Uniform random lists,100,0.0467924528301887,NetFunrankR v2
-NFR-overlap,Hub-biased random lists,200,0.0216981132075472,NetFunrankR v2
-NFR-linker,Hub-biased random lists,200,0.0486949685534591,NetFunrankR v2
-NFR-distance,Hub-biased random lists,200,0.0535534591194969,NetFunrankR v2
-NFR-total,Hub-biased random lists,200,0.0528301886792453,NetFunrankR v2
-NFR-combined,Hub-biased random lists,200,0.0491037735849057,NetFunrankR v2
-NFR-combined-dist,Hub-biased random lists,200,0.0495440251572327,NetFunrankR v2
-NFR-overlap,Uniform random lists,200,0.0241823899371069,NetFunrankR v2
-NFR-linker,Uniform random lists,200,0.0349842767295598,NetFunrankR v2
-NFR-distance,Uniform random lists,200,0.0414622641509434,NetFunrankR v2
-NFR-total,Uniform random lists,200,0.0418710691823899,NetFunrankR v2
-NFR-combined,Uniform random lists,200,0.0414150943396226,NetFunrankR v2
-NFR-combined-dist,Uniform random lists,200,0.0408647798742138,NetFunrankR v2
+Proximity-closest,Uniform random lists,200,0.0560849056603774,Network (published)
+Proximity-symmetric,Uniform random lists,200,0.057562893081761,Network (published)
+NetFunrankR-overlap,Hub-biased random lists,20,0.0139779874213836,NetFunrankR
+NetFunrankR-linker,Hub-biased random lists,20,0.0283333333333333,NetFunrankR
+NetFunrankR-distance,Hub-biased random lists,20,0.0347955974842767,NetFunrankR
+NetFunrankR-total,Hub-biased random lists,20,0.0358176100628931,NetFunrankR
+NetFunrankR,Hub-biased random lists,20,0.0321540880503145,NetFunrankR
+NetFunrankR-distance-combined,Hub-biased random lists,20,0.0360534591194969,NetFunrankR
+NetFunrankR-overlap,Uniform random lists,20,0.0163207547169811,NetFunrankR
+NetFunrankR-linker,Uniform random lists,20,0.027751572327044,NetFunrankR
+NetFunrankR-distance,Uniform random lists,20,0.0385220125786164,NetFunrankR
+NetFunrankR-total,Uniform random lists,20,0.0406918238993711,NetFunrankR
+NetFunrankR,Uniform random lists,20,0.0358333333333333,NetFunrankR
+NetFunrankR-distance-combined,Uniform random lists,20,0.0390723270440252,NetFunrankR
+NetFunrankR-overlap,Hub-biased random lists,50,0.0202987421383648,NetFunrankR
+NetFunrankR-linker,Hub-biased random lists,50,0.0361163522012579,NetFunrankR
+NetFunrankR-distance,Hub-biased random lists,50,0.0401100628930818,NetFunrankR
+NetFunrankR-total,Hub-biased random lists,50,0.0416981132075472,NetFunrankR
+NetFunrankR,Hub-biased random lists,50,0.0433018867924528,NetFunrankR
+NetFunrankR-distance-combined,Hub-biased random lists,50,0.0425471698113208,NetFunrankR
+NetFunrankR-overlap,Uniform random lists,50,0.0188679245283019,NetFunrankR
+NetFunrankR-linker,Uniform random lists,50,0.0289465408805031,NetFunrankR
+NetFunrankR-distance,Uniform random lists,50,0.0392610062893082,NetFunrankR
+NetFunrankR-total,Uniform random lists,50,0.0397169811320755,NetFunrankR
+NetFunrankR,Uniform random lists,50,0.0378301886792453,NetFunrankR
+NetFunrankR-distance-combined,Uniform random lists,50,0.0404874213836478,NetFunrankR
+NetFunrankR-overlap,Hub-biased random lists,100,0.0229559748427673,NetFunrankR
+NetFunrankR-linker,Hub-biased random lists,100,0.0438836477987421,NetFunrankR
+NetFunrankR-distance,Hub-biased random lists,100,0.0470911949685535,NetFunrankR
+NetFunrankR-total,Hub-biased random lists,100,0.0475,NetFunrankR
+NetFunrankR,Hub-biased random lists,100,0.0462421383647799,NetFunrankR
+NetFunrankR-distance-combined,Hub-biased random lists,100,0.0472327044025157,NetFunrankR
+NetFunrankR-overlap,Uniform random lists,100,0.0204088050314465,NetFunrankR
+NetFunrankR-linker,Uniform random lists,100,0.0324528301886792,NetFunrankR
+NetFunrankR-distance,Uniform random lists,100,0.0477672955974843,NetFunrankR
+NetFunrankR-total,Uniform random lists,100,0.0488364779874214,NetFunrankR
+NetFunrankR,Uniform random lists,100,0.0411320754716981,NetFunrankR
+NetFunrankR-distance-combined,Uniform random lists,100,0.0467924528301887,NetFunrankR
+NetFunrankR-overlap,Hub-biased random lists,200,0.0216981132075472,NetFunrankR
+NetFunrankR-linker,Hub-biased random lists,200,0.0486949685534591,NetFunrankR
+NetFunrankR-distance,Hub-biased random lists,200,0.0535534591194969,NetFunrankR
+NetFunrankR-total,Hub-biased random lists,200,0.0528301886792453,NetFunrankR
+NetFunrankR,Hub-biased random lists,200,0.0491037735849057,NetFunrankR
+NetFunrankR-distance-combined,Hub-biased random lists,200,0.0495440251572327,NetFunrankR
+NetFunrankR-overlap,Uniform random lists,200,0.0241823899371069,NetFunrankR
+NetFunrankR-linker,Uniform random lists,200,0.0349842767295598,NetFunrankR
+NetFunrankR-distance,Uniform random lists,200,0.0414622641509434,NetFunrankR
+NetFunrankR-total,Uniform random lists,200,0.0418710691823899,NetFunrankR
+NetFunrankR,Uniform random lists,200,0.0414150943396226,NetFunrankR
+NetFunrankR-distance-combined,Uniform random lists,200,0.0408647798742138,NetFunrankR

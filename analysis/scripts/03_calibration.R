@@ -11,8 +11,8 @@ schemes <- c("uniform", "hub")
 n_rep <- as.integer(Sys.getenv("NF_NREP", 200))
 design <- CJ(size = sizes, scheme = schemes, rep = seq_len(n_rep))
 
-METHODS <- nf_methods_env(c("ora", "nea", "rwr", "guney", "v1", "nfr"))
-cl <- makeCluster(as.integer(Sys.getenv("NF_CORES", 14)))
+METHODS <- nf_methods_env(c("ora", "nea", "rwr", "closest", "symmetric", "nfr"))
+cl <- makeCluster(nf_cores())
 clusterExport(cl, "METHODS")
 on.exit(stopCluster(cl))
 clusterEvalQ(cl, {
@@ -26,8 +26,8 @@ clusterSetRNGStream(cl, 20261021)
 
 res <- parLapplyLB(cl, seq_len(nrow(design)), function(i, design) {
   d <- design[i]
-  w <- if (d$scheme == "hub") net$degree else rep(1, length(net$genes))
-  q <- sample(net$genes, d$size, prob = w)
+  w <- if (d$scheme == "hub") nodeDegree(net) else rep(1, length(nodeNames(net)))
+  q <- sample(nodeNames(net), d$size, prob = w)
   r <- run_genelist_methods(q, ctx, methods = METHODS)
   r[, `:=`(size = d$size, scheme = d$scheme, rep = d$rep)]
   r

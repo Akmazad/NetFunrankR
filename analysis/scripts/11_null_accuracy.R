@@ -10,22 +10,22 @@ suppressPackageStartupMessages({
 })
 net <- readRDS(file.path(AN, "data", "nf_networks.rds"))$string_nokb400
 gs <- kegg_symbols()
-D <- set_distances(net, gs)
+D <- geneSetDistances(net, gs)
 
 set.seed(21)
-ex <- nf_proximity_test(COPD_proteinCodingGenes, gs, net, D = D)
-mc <- nf_proximity_perm(COPD_proteinCodingGenes, gs, net, D = D, n_perm = 2000L)
+ex <- nfTest(COPD_proteinCodingGenes, gs, net, D = D)
+mc <- nfPerm(COPD_proteinCodingGenes, gs, net, D = D, n_perm = 2000L)
 a <- merge(as.data.table(ex)[, .(set, exact = p_proximity)],
            as.data.table(mc)[, .(set, mc = p_perm)], by = "set")
 cat("exact vs MC Spearman (log p):", cor(log10(a$exact), log10(a$mc), method = "spearman"), "\n")
 
-qs <- list(`random, 100 genes` = sample(net$genes, 100, prob = net$degree),
-           `random, 400 genes` = sample(net$genes, 400, prob = net$degree),
+qs <- list(`random, 100 genes` = sample(nodeNames(net), 100, prob = nodeDegree(net)),
+           `random, 400 genes` = sample(nodeNames(net), 400, prob = nodeDegree(net)),
            `COPD, 261 genes` = COPD_proteinCodingGenes)
 b <- rbindlist(lapply(names(qs), function(n) {
   q <- qs[[n]]
-  e <- as.data.table(nf_proximity_test(q, gs, net, D = D, exact_max = 1e6))
-  s <- as.data.table(nf_proximity_test(q, gs, net, D = D, exact_max = 0))
+  e <- as.data.table(nfTest(q, gs, net, D = D, exact_max = 1e6))
+  s <- as.data.table(nfTest(q, gs, net, D = D, exact_max = 0))
   cols <- c("p_overlap", "p_linker", "p_beyond", "p_proximity")
   m <- merge(e[, c("set", cols), with = FALSE], s[, c("set", cols), with = FALSE],
              by = "set", suffixes = c(".exact", ".saddle"))

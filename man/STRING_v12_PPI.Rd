@@ -3,29 +3,36 @@
 \docType{data}
 \name{STRING_v12_PPI}
 \alias{STRING_v12_PPI}
-\title{STRING_v12_PPI}
+\title{STRING v12 human protein associations}
 \format{
-A data frame with four variables:
-\describe{
-\item{\code{from}, \code{to}}{HGNC gene symbols}
-\item{\code{combined_score}}{STRING combined score (all channels)}
-\item{\code{nokb_score}}{combined score without database/text-mining channels}
-}
+A \code{data.frame} with columns \code{from}, \code{to} (HGNC
+  symbols), \code{combined_score} and \code{nokb_score} (0--1000).
 }
 \source{
-<https://string-db.org/> (protein.links.detailed.v12.0)
+STRING v12.0 (\url{https://string-db.org}), CC BY 4.0; created
+  with \code{inst/script/make-STRING_v12_PPI.R}.
 }
 \usage{
 STRING_v12_PPI
 }
 \description{
-Human protein-protein associations from STRING v12.0 (taxon 9606), mapped
-to HGNC symbols. Two scores are provided: the published combined score,
-and a combined score recomputed (STRING channel-combination rule with
-prior 0.041) from the neighborhood, fusion, co-occurrence, co-expression
-and experimental channels only, i.e. without the curated-database and
-text-mining channels that are partly derived from pathway databases.
-Edges are retained if \code{nokb_score >= 400} or
-\code{combined_score >= 700}.
+Human protein associations from STRING v12.0 mapped to HGNC symbols, with
+two scores: the published combined score, and a combined score recomputed
+with STRING's channel-combination rule (prior 0.041) from the
+neighbourhood, fusion, co-occurrence, co-expression and experimental
+channels only, i.e. without the curated-database and text-mining channels
+that are partly derived from pathway databases. Edges are retained if
+\code{nokb_score >= 400} or \code{combined_score >= 700}.
+}
+\examples{
+data(STRING_v12_PPI, package = "NetFunrankR")
+summary(STRING_v12_PPI$nokb_score)
+}
+\references{
+Szklarczyk D, et al. (2023) The STRING database in 2023.
+  \emph{Nucleic Acids Research} 51:D638--D646.
+}
+\seealso{
+\code{\link{stringNetwork}}
 }
 \keyword{datasets}

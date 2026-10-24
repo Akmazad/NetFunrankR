@@ -1,0 +1,77 @@
+---
+title: "NetFunrankR report"
+date: "`r format(Sys.time(), '%d %B %Y, %H:%M')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+params:
+  result: NULL
+  network: NULL
+  alpha: 0.05
+  code: ""
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+    fig.width = 9, fig.height = 6, dpi = 120)
+library(NetFunrankR)
+res <- params$result
+alpha <- params$alpha
+tab <- as.data.frame(res, alpha = alpha)
+ev <- table(evidenceClass(res, alpha))
+```
+
+## Summary
+
+- **Query genes in the network:** `r length(queryGenes(res))`
+  (`r length(unmatchedGenes(res))` not found)
+- **Network:** `r nfParams(res)$network`
+- **Gene sets tested:** `r nrow(tab)`
+- **Significant (FDR < `r alpha`):** `r sum(tab$fdr_combined < alpha)`
+  (hypergeometric ORA: `r sum(tab$fdr_hyper < alpha)`)
+- **Evidence classes:** overlap + network `r ev[["overlap + network"]]`,
+  overlap only `r ev[["overlap only"]]`,
+  network only `r ev[["network only"]]`, joint `r ev[["joint"]]`
+
+## Evidence map
+
+```{r evidence-map}
+plotEvidenceMap(res, alpha = alpha)
+```
+
+## Top gene sets
+
+```{r top-sets}
+plotTopSets(res, n = 25, alpha = alpha)
+```
+
+## Significant gene sets
+
+```{r table}
+sig <- tab[tab$fdr_combined < alpha, c("set", "evidence", "overlap",
+    "overlap_expected", "n_linker", "linker_expected", "p_overlap",
+    "p_linker", "fdr_combined", "fdr_hyper", "linker_genes")]
+for (p in c("p_overlap", "p_linker", "fdr_combined", "fdr_hyper"))
+    sig[[p]] <- signif(sig[[p]], 2)
+sig$overlap_expected <- round(sig$overlap_expected, 1)
+sig$linker_expected <- round(sig$linker_expected, 1)
+knitr::kable(sig, row.names = FALSE)
+```
+
+## Unmatched query genes
+
+`r if (length(unmatchedGenes(res))) paste(unmatchedGenes(res), collapse = ", ") else "None."`
+
+## Reproduce this analysis
+
+```{r code, results = "asis"}
+cat("```r\n", paste(params$code, collapse = "\n"), "\n```\n", sep = "")
+```
+
+## Session information
+
+```{r session}
+sessionInfo()
+```

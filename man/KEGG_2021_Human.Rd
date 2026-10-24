@@ -3,21 +3,26 @@
 \docType{data}
 \name{KEGG_2021_Human}
 \alias{KEGG_2021_Human}
-\title{KEGG_2021_Human}
+\title{KEGG pathways (Enrichr KEGG_2021_Human)}
 \format{
-A data frame with two variables:
-\describe{
-\item{\code{GeneSymbol}}{HUGO gene symbols belonging to a pathway}
-\item{\code{PathwayName}}{Pathway name}
-}
+A \code{data.frame} with columns \code{GeneSymbol} (HGNC symbol)
+  and \code{PathwayName}; 320 pathways.
 }
 \source{
-<https://maayanlab.cloud/Enrichr/#libraries>
+\url{https://maayanlab.cloud/Enrichr/#libraries}; see
+  \code{inst/script/make-STRING_v12_PPI.R}.
 }
 \usage{
 KEGG_2021_Human
 }
 \description{
-KEGG pathway annotation data from Enrichr Library
+KEGG pathways (Enrichr KEGG_2021_Human)
+}
+\examples{
+data(KEGG_2021_Human, package = "NetFunrankR")
+length(unique(KEGG_2021_Human$PathwayName))
+}
+\seealso{
+\code{\link{loadPathways}}
 }
 \keyword{datasets}

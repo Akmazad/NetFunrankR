@@ -4,9 +4,6 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(patchwork)
 })
-source("R/plotFactory.R")   # latest plotting code without reinstalling
-suppressPackageStartupMessages({
-})
 save_fig <- function(p, name, w, h) {
   ggsave(file.path(FIG, paste0(name, ".pdf")), p, width = w, height = h, device = cairo_pdf)
   ggsave(file.path(FIG, paste0(name, ".png")), p, width = w, height = h, dpi = 200, bg = "white")
@@ -32,7 +29,7 @@ if (file.exists(f)) {
   qq[, family := method_family(as.character(method))]
   ymax <- 8
   ends <- qq[, .SD[which.max(exp)], by = .(method, scheme)][
-    method %in% c("ORA", "NEA", "NFR-combined", "Proximity-z", "NetFunrankR-v1")]
+    method %in% c("ORA", "NEA", "NetFunrankR", "Proximity-closest", "Proximity-symmetric")]
   ends[, lab := as.character(method)]
   ends[, y := pmin(obs, ymax)]
   # off-scale curves are labelled where they leave the panel
@@ -62,7 +59,8 @@ if (file.exists(f)) {
   pb <- ggplot(s, aes(factor(size), fpr, fill = family)) +
     geom_hline(yintercept = 0.05, linetype = "dashed", colour = "grey40") +
     geom_col(width = 0.75) +
-    facet_grid(scheme ~ method) + fam_scale +
+    facet_grid(scheme ~ method, labeller = labeller(
+      method = function(x) gsub("-", "-\n", x, fixed = TRUE))) + fam_scale +
     scale_y_continuous(labels = scales::percent) +
     labs(x = "Query size", y = "False-positive rate (p < 0.05)",
          title = "b  Type-I error per gene set") +
@@ -90,7 +88,7 @@ if (file.exists(f)) {
     s <- pw[method %in% key, .(power = mean(q < 0.05, na.rm = TRUE),
                                rank = median(rank, na.rm = TRUE)), by = .(method, s, h)]
     s[, method := factor(method, key)]
-    s[, main := method == "NFR-combined"]
+    s[, main := method == "NetFunrankR"]
     facet <- facet_wrap(~s, labeller = labeller(s = function(x) paste0("signal = ", as.numeric(x) * 100, "% of query")))
     base <- function(y, ylab, title) {
       ggplot(s, aes(h, .data[[y]], colour = method, linewidth = main)) +
@@ -107,9 +105,9 @@ if (file.exists(f)) {
     save_fig(p, name, 10, 8)
     s
   }
-  power_fig(c("ORA", "NEA", "RWR", "Proximity-z", "NFR-overlap", "NFR-combined"),
+  power_fig(c("ORA", "NEA", "RWR", "Proximity-closest", "NetFunrankR-overlap", "NetFunrankR"),
             "Fig3_power_incomplete_annotation")
-  s <- power_fig(c("NFR-overlap", "NFR-linker", "NFR-distance", "NFR-combined", "ORA"),
+  s <- power_fig(c("NetFunrankR-overlap", "NetFunrankR-linker", "NetFunrankR-distance", "NetFunrankR", "ORA"),
                  "FigS_power_components")
   fwrite(dcast(s, method + s ~ h, value.var = "power"), file.path(RES, "power_table.csv"))
 }
@@ -126,7 +124,7 @@ if (file.exists(f)) {
              gsea = "GSEA", padog = "PADOG", roast = "ROAST", samgs = "SAMGS")
   fix4 <- function(dt) {
     dt[, method := as.character(method)]
-    dt <- dt[!method %in% c("NFR-total", "NFR-distance", "NFR-combined-dist")]
+    dt <- dt[!method %in% c("NetFunrankR-total", "NetFunrankR-distance", "NetFunrankR-distance-combined")]
     dt[method %in% names(ebmap), method := ebmap[method]]
     dt
   }
@@ -151,7 +149,6 @@ if (file.exists(f)) {
               variable.name = "method", value.name = "sec")
   nt <- rbindlist(lapply(rt$net, function(x) as.data.table(as.list(x))), fill = TRUE)
   nt <- melt(nt, measure.vars = names(nt), variable.name = "method", value.name = "sec")
-  nt[method == "NFR", method := "NFR-combined"]
   tt <- rbind(ebt[, .(method = as.character(method), sec)], nt[, .(method = as.character(method), sec)])
   tt <- fix4(tt)
   tt[, family := method_family(method)]
@@ -169,7 +166,7 @@ if (file.exists(f)) {
 # ================================================================ Fig 5: GWAS
 f <- file.path(RES, "gwas", "relevance.rds")
 if (file.exists(f)) {
-  main_m <- c("ORA", "NEA", "RWR", "Proximity-z", "NetFunrankR-v1", "NFR-overlap", "NFR-combined")
+  main_m <- c("ORA", "NEA", "RWR", "Proximity-closest", "Proximity-symmetric", "NetFunrankR-overlap", "NetFunrankR")
   box_panel <- function(dt, y, ylab, title, methods, hline = NULL, pct = FALSE) {
     dt <- dt[method %in% methods]
     dt[, method := factor(method, methods)]
@@ -191,7 +188,7 @@ if (file.exists(f)) {
                    "a  MalaCards relevance (25 diseases)", main_m)
   # paired gains over ORA
   w <- dcast(rl, disease ~ method, value.var = "relevance")
-  gm <- c("NEA", "RWR", "Proximity-z", "NFR-overlap", "NFR-combined")
+  gm <- c("NEA", "RWR", "Proximity-closest", "NetFunrankR-overlap", "NetFunrankR")
   gain <- rbindlist(lapply(gm, function(m) data.table(method = m, disease = w$disease,
                                                        gain = w[[m]] - w$ORA)))
   pv <- gain[, .(p = wilcox.test(gain)$p.value, wins = sum(gain > 0), n = .N,
@@ -232,7 +229,7 @@ if (file.exists(f)) {
   save_fig(((p5a | p5b) / (p5c | p5d | p5e)) + plot_layout(guides = "collect") &
              theme(legend.position = "bottom"), "Fig5_GWAS_benchmark", 14, 10)
   # supplement: all NetFunrankR components
-  comp <- c("ORA", "NFR-overlap", "NFR-linker", "NFR-distance", "NFR-total", "NFR-combined-dist", "NFR-combined")
+  comp <- c("ORA", "NetFunrankR-overlap", "NetFunrankR-linker", "NetFunrankR-distance", "NetFunrankR-total", "NetFunrankR-distance-combined", "NetFunrankR")
   save_fig((box_panel(rl, "relevance", "Relevance (% of optimum)", "a  MalaCards relevance", comp) |
               box_panel(tr, "rank", "Target pathway rank percentile", "b  Target pathway", comp, pct = TRUE) |
               box_panel(tv, "auroc", "AUROC", "c  Temporal validation", comp, hline = 0.5)) +
@@ -248,7 +245,7 @@ if (file.exists(f)) {
     , .(rel = mean(rel), lo = min(rel), hi = max(rel)), by = .(variant, method)]
   vlev <- c("STRING noKB>=400", "STRING noKB>=700", "STRING all>=700 (circular)",
             "bin size 50", "bin size 250", "dropout 10%", "dropout 25%", "dropout 50%", "rewired")
-  s <- s[method %in% c("ORA", "Proximity-z", "NFR-overlap", "NFR-linker", "NFR-distance", "NFR-combined")]
+  s <- s[method %in% c("ORA", "Proximity-closest", "NetFunrankR-overlap", "NetFunrankR-linker", "NetFunrankR-distance", "NetFunrankR")]
   s[, variant := factor(variant, rev(vlev))]
   s[, method := ord(method)]
   p6a <- ggplot(s, aes(rel, variant, colour = method)) +
@@ -268,27 +265,24 @@ if (file.exists(f)) {
 }
 
 # ================================================================ Fig 7: COPD case study
-f <- file.path(RES, "copd", "copd_kegg_netfunrankr_v2.csv")
+f <- file.path(RES, "copd", "copd_kegg_result.rds")
 if (file.exists(f)) {
   net <- readRDS(file.path(AN, "data", "nf_networks.rds"))$string_nokb400
-  res <- fread(f)
-  res[, set := sub("^hsa[0-9]+_", "", set)][, set := gsub("_", " ", set)]
-  class(res) <- c("nf_result", class(res))
-  p7a <- plot_evidence_map(res, n_label = 14) + ggtitle("a  Evidence map, COPD genes vs KEGG")
-  kegg.gs <- readRDS(file.path(AN, "data", "kegg_gs_entrez.rds"))
-  eg2sym <- AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, unique(unlist(kegg.gs)),
-                                  "SYMBOL", "ENTREZID")
-  raw <- fread(f)
-  netonly <- raw[evidence %in% c("network only", "overlap + network")][order(p_beyond)]
-  if (nrow(netonly)) {
-    s1 <- netonly$set[1]
-    Y <- unique(stats::na.omit(eg2sym[kegg.gs[[s1]]]))
-    p7b <- plot_linker_network(COPD_proteinCodingGenes, Y, net, max_members = 35) +
-      ggtitle(paste0("b  ", gsub("_", " ", sub("^hsa[0-9]+_", "", s1))))
-  } else p7b <- plot_spacer()
+  res <- readRDS(f)
+  clean <- function(x) gsub("_", " ", sub("^hsa[0-9]+_", "", x))
+  res@results$set <- clean(res@results$set)
+  names(res@geneSets) <- clean(names(res@geneSets))
+  p7a <- plotEvidenceMap(res, nLabel = 14) + ggtitle("a  Evidence map, COPD genes vs KEGG")
+  ev <- evidenceClass(res)
+  tab <- enrichResults(res)
+  pick <- which(ev %in% c("network only", "overlap + network"))
+  p7b <- if (length(pick)) {
+    s1 <- tab$set[pick][which.min(tab$p_linker[pick])]
+    plotLinkerNetwork(res, s1, net, maxMembers = 35) + ggtitle(paste0("b  ", s1))
+  } else plot_spacer()
   sm <- fread(file.path(RES, "copd", "copd_small_lists.csv"))
   s <- sm[, .(rel = mean(relevance), se = sd(relevance) / sqrt(.N)), by = .(method, size)]
-  s <- s[method %in% c("ORA", "NEA", "RWR", "Proximity-z", "NFR-overlap", "NFR-combined")]
+  s <- s[method %in% c("ORA", "NEA", "RWR", "Proximity-closest", "NetFunrankR-overlap", "NetFunrankR")]
   s[, method := factor(method, names(LINE_COLS))]
   p7c <- ggplot(s, aes(size, rel, colour = method)) +
     geom_line(linewidth = 0.7) + geom_point(size = 1.8) +
@@ -303,20 +297,20 @@ if (file.exists(f)) {
 f <- file.path(RES, "runtime.csv")
 if (file.exists(f)) {
   rt0 <- fread(f)
-  v1 <- rt0[grepl("original", method)]
+  orig <- rt0[grepl("^Original", method)]
   rt <- rt0[!is.na(size) & !is.na(seconds)]
   # m_nfr() runs the test twice (linker and distance combinations)
-  rt[method == "NFR (all four tests)", `:=`(seconds = seconds / 2, method = "NetFunrankR v2")]
+  rt[method == "NetFunrankR (all tests)", `:=`(seconds = seconds / 2, method = "NetFunrankR")]
   rt[, method := sub(" [(].*", "", method)]
-  rt[method == "NetFunrankR-v1 statistic", method := "NetFunrankR v1 statistic, 1000 perm"]
-  rt[method == "Proximity-z", method := "Proximity-z, 1000 perm"]
+  rt[method == "Proximity-symmetric", method := "Proximity-symmetric, 1000 perm"]
+  rt[method == "Proximity-closest", method := "Proximity-closest, 1000 perm"]
   rt[method == "RWR", method := "RWR, 200 perm"]
   rt[, seconds := pmax(seconds, 0.01)]          # timer resolution
-  cols <- c(`NetFunrankR v2` = "#eb6834", ORA = "#2a78d6", `Proximity-z, 1000 perm` = "#1baf7a",
-            `RWR, 200 perm` = "#eda100", `NetFunrankR v1 statistic, 1000 perm` = "#e87ba4",
+  cols <- c(`NetFunrankR` = "#eb6834", ORA = "#2a78d6", `Proximity-closest, 1000 perm` = "#1baf7a",
+            `RWR, 200 perm` = "#eda100", `Proximity-symmetric, 1000 perm` = "#e87ba4",
             NEA = "#6250d6")
   p8 <- ggplot(rt, aes(size, seconds, colour = method)) +
-    geom_line(aes(linewidth = method == "NetFunrankR v2")) + geom_point(size = 1.6) +
+    geom_line(aes(linewidth = method == "NetFunrankR")) + geom_point(size = 1.6) +
     scale_linewidth_manual(values = c(`FALSE` = 0.6, `TRUE` = 1.4), guide = "none") +
     facet_wrap(~library) + scale_x_log10() +
     scale_y_log10(breaks = c(0.01, 0.1, 1, 10, 100, 1000, 10000),
@@ -324,9 +318,9 @@ if (file.exists(f)) {
     scale_colour_manual(values = cols, name = NULL) +
     labs(x = "Query genes (log scale)", y = "Seconds for the whole library (log scale)") +
     theme_nf()
-  if (nrow(v1)) {
-    lab <- data.table(library = "KEGG", size = v1$size, seconds = v1$seconds,
-                      txt = sprintf("NetFunrankR v1 original code\n(100 perm): %.1f h", v1$seconds / 3600))
+  if (nrow(orig)) {
+    lab <- data.table(library = "KEGG", size = orig$size, seconds = orig$seconds,
+                      txt = sprintf("Original implementation\n(100 perm): %.1f h", orig$seconds / 3600))
     p8 <- p8 + geom_point(data = lab, aes(size, seconds), inherit.aes = FALSE, shape = 4, size = 3) +
       geom_text(data = lab, aes(size, seconds, label = txt), inherit.aes = FALSE,
                 hjust = 1.08, size = 2.8, colour = ink)

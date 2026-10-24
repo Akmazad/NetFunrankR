@@ -3,17 +3,23 @@
 \docType{data}
 \name{COPD_proteinCodingGenes}
 \alias{COPD_proteinCodingGenes}
-\title{COPD_proteinCodingGenes}
+\title{COPD-associated protein-coding genes}
 \format{
-A character vector of HGNC gene symbols.
+A character vector of 307 HGNC gene symbols.
 }
 \source{
-Morselli Gysi et al. (2021) <https://doi.org/10.1073/pnas.2025581118>
+Morselli Gysi D, et al. (2021) Network medicine framework for
+  identifying drug-repurposing opportunities for COVID-19.
+  \emph{PNAS} 118:e2025581118.
 }
 \usage{
 COPD_proteinCodingGenes
 }
 \description{
-List of genes (HGNC symbols) found associated with COPD disease
+COPD-associated protein-coding genes
+}
+\examples{
+data(COPD_proteinCodingGenes, package = "NetFunrankR")
+head(COPD_proteinCodingGenes)
 }
 \keyword{datasets}

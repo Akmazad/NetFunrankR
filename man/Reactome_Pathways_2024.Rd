@@ -3,21 +3,25 @@
 \docType{data}
 \name{Reactome_Pathways_2024}
 \alias{Reactome_Pathways_2024}
-\title{Reactome_Pathways_2024}
+\title{Reactome pathways (Enrichr Reactome_Pathways_2024)}
 \format{
-A data frame with two variables:
-\describe{
-\item{\code{GeneSymbol}}{HUGO gene symbols belonging to a pathway}
-\item{\code{PathwayName}}{Pathway name}
-}
+A \code{data.frame} with columns \code{GeneSymbol} and
+  \code{PathwayName}.
 }
 \source{
-<https://maayanlab.cloud/Enrichr/#libraries>
+\url{https://maayanlab.cloud/Enrichr/#libraries}
 }
 \usage{
 Reactome_Pathways_2024
 }
 \description{
-Reactome pathway annotation data from Enrichr Library
+Reactome pathways (Enrichr Reactome_Pathways_2024)
+}
+\examples{
+data(Reactome_Pathways_2024, package = "NetFunrankR")
+length(unique(Reactome_Pathways_2024$PathwayName))
+}
+\seealso{
+\code{\link{loadPathways}}
 }
 \keyword{datasets}

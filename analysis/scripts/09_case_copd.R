@@ -1,5 +1,5 @@
 # Case study: COPD genes (Morselli Gysi et al. 2021, PNAS) vs KEGG.
-#  - full NetFunrankR v2 result table + evidence classes
+#  - full NetFunrankR result table + evidence classes
 #  - agreement with MalaCards COPD (PDCO) relevance, all gene-list methods
 #  - cross-modal check: CAMERA on COPD expression data (GSE42057, geo2kegg)
 #  - small-list scenario: random subsets of 6 / 10 / 20 COPD genes
@@ -20,9 +20,10 @@ eg2sym <- AnnotationDbi::mapIds(org.Hs.eg.db::org.Hs.eg.db, unique(unlist(kegg.g
 gs <- lapply(kegg.gs, function(s) unique(unname(stats::na.omit(eg2sym[s]))))
 ctx <- make_ctx(gs, net)
 
-res <- nf_proximity_test(q, gs, net, D = ctx$D, max_size = 500L)
-res$evidence <- nf_evidence_class(res)
-fwrite(res, file.path(OUT, "copd_kegg_netfunrankr_v2.csv"))
+resObj <- netEnrich(q, gs, net, distances = ctx$D, maxSize = 500L)
+saveRDS(resObj, file.path(OUT, "copd_kegg_result.rds"))
+res <- as.data.frame(resObj)
+fwrite(res, file.path(OUT, "copd_kegg_netfunrankr.csv"))
 print(table(res$evidence))
 
 set.seed(2)
@@ -51,7 +52,7 @@ fwrite(xm, file.path(OUT, "copd_vs_GSE42057_camera.csv"))
 print(xm[order(-rho)])
 
 # small query lists: random subsets of COPD genes
-cl <- makeCluster(as.integer(Sys.getenv("NF_CORES", 14)))
+cl <- makeCluster(nf_cores())
 clusterExport(cl, c("gs", "net", "q", "mala", "opt"))
 clusterEvalQ(cl, {
   source("analysis/scripts/00_setup.R")
@@ -62,8 +63,8 @@ clusterSetRNGStream(cl, 6)
 jobs <- CJ(size = c(6L, 10L, 20L, 50L), rep = 1:50)
 small <- rbindlist(parLapplyLB(cl, seq_len(nrow(jobs)), function(i, jobs) {
   j <- jobs[i]
-  qq <- sample(intersect(q, net$genes), j$size)
-  r <- run_genelist_methods(qq, ctx, methods = c("ora", "nea", "rwr", "guney", "nfr"))
+  qq <- sample(intersect(q, nodeNames(net)), j$size)
+  r <- run_genelist_methods(qq, ctx, methods = c("ora", "nea", "rwr", "closest", "nfr"))
   r[!is.na(p), {
     dd <- .SD[order(p)]
     .(relevance = 100 * GSEABenchmarkeR::evalRelevance(

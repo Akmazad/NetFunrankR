@@ -33,7 +33,7 @@ for (b in c(50L, 250L))
   variants[[length(variants) + 1]] <- list(name = sprintf("bin size %d", b),
                                            edges = "string_nokb400", bin = b)
 
-cl <- makeCluster(min(length(variants), as.integer(Sys.getenv("NF_CORES", 14))))
+cl <- makeCluster(min(length(variants), nf_cores()))
 clusterExport(cl, c("edges", "gs", "lists"))
 clusterEvalQ(cl, source("analysis/scripts/00_setup.R"))
 clusterSetRNGStream(cl, 5)
@@ -45,10 +45,10 @@ res <- parLapplyLB(cl, variants, function(v) {
     g <- igraph::rewire(g, igraph::keeping_degseq(niter = 10 * igraph::ecount(g)))
     e <- igraph::as_data_frame(g)[, 1:2]
   }
-  net <- nf_network(e, min_bin_size = if (is.null(v$bin)) 100L else v$bin)
+  net <- buildNetwork(e, minBinSize = if (is.null(v$bin)) 100L else v$bin)
   ctx <- make_ctx(gs, net)
   out <- rbindlist(lapply(names(lists), function(d) {
-    r <- run_genelist_methods(lists[[d]], ctx, methods = c("ora", "guney", "nfr"))
+    r <- run_genelist_methods(lists[[d]], ctx, methods = c("ora", "closest", "nfr"))
     r[, disease := d]
   }))
   out[, `:=`(variant = v$name, rep = if (is.null(v$rep)) 1L else v$rep)]
@@ -79,7 +79,7 @@ stab <- parLapplyLB(cl, seq_len(nrow(jobs)), function(i, jobs) {
   j <- jobs[i]
   q <- lists[[j$disease]]
   if (j$rep > 0) q <- sample(q, ceiling(length(q) / 2))
-  r <- run_genelist_methods(q, ctx, methods = c("ora", "rwr", "guney", "nfr"))
+  r <- run_genelist_methods(q, ctx, methods = c("ora", "rwr", "closest", "nfr"))
   r[, `:=`(disease = j$disease, rep = j$rep)]
 }, jobs = jobs)
 stopCluster(cl)

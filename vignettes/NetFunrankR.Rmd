@@ -1,97 +1,223 @@
 ---
-title: "NetFunrankR: decomposed network-proximity enrichment"
-output: rmarkdown::html_vignette
+title: "NetFunrankR: decomposed network-proximity enrichment analysis"
+author:
+- name: AKM Azad
+  affiliation: Imam Mohammad Ibn Saud Islamic University (IMSIU), Riyadh
+  email: kazad@imamu.edu.sa
+- name: Mohammad Ali Moni
+  affiliation: The University of Queensland
+package: NetFunrankR
+output:
+  BiocStyle::html_document:
+    toc_float: true
+abstract: >
+  NetFunrankR tests whether a gene list is closer to each pathway in the
+  human protein interaction network than degree-matched random genes, and
+  splits the evidence into a degree-aware overlap test and beyond-overlap
+  tests of the query genes that are not annotated to the pathway. All null
+  distributions are exact, so no permutations are needed. This vignette
+  shows the main workflow, the interpretation of the results and the
+  interactive dashboard.
 vignette: >
-  %\VignetteIndexEntry{NetFunrankR}
+  %\VignetteIndexEntry{NetFunrankR: decomposed network-proximity enrichment}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(fig.width = 8, fig.height = 5.5, fig.align = "center",
-                      dpi = 100, out.width = "100%")
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+    fig.height = 5, dpi = 90)
 ```
 
-NetFunrankR tests whether a gene list is *closer* to a pathway in the
-protein-protein interaction (PPI) network than degree-matched random genes,
-and splits that evidence into
+# Introduction
 
-* **overlap**: query genes annotated to the pathway (degree-aware test), and
-* **beyond overlap**: query genes *not* annotated to the pathway but close to
-  its members in the network.
+Over-representation analysis (ORA) only counts query genes that are
+annotated to a pathway and assumes that every gene is equally likely to be
+selected. Disease-gene and GWAS lists, however, are enriched for highly
+connected, well-studied proteins, and pathway annotations are incomplete.
 
-Both parts are tested against exact (permutation-free) null distributions and
-combined with Fisher's method; the two p-values are independent under the
-null, so the combination is valid.
+NetFunrankR addresses both problems with three tests for each gene set:
 
-## Quick start
+1.  **Overlap test** — how many query genes are members of the gene set,
+    compared with random genes of the same network degree
+    (Poisson-binomial, corrects the hub bias of the hypergeometric test).
+2.  **Linker test** — among query genes that are *not* members, how many
+    interact directly with a member, compared with random non-members of
+    the same degree.
+3.  **Combined test** — the two tests are independent under the null
+    hypothesis and are combined with Fisher's method.
 
-```{r}
+Null distributions are computed exactly by discrete convolution over degree
+bins (saddlepoint approximation for lists longer than 500 genes).
+
+# Installation
+
+```{r install, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("NetFunrankR")
+```
+
+# Quick start
+
+```{r quick}
 library(NetFunrankR)
-
-net  <- string_network("noKB")   # STRING v12 without database/text-mining channels
-kegg <- load_pathways("KEGG")
+data(COPD_proteinCodingGenes)   # 307 COPD genes (Morselli Gysi et al. 2021)
+net <- stringNetwork()   # STRING v12 without database/text-mining evidence
 net
+kegg <- loadPathways("KEGG")
+res <- netEnrich(COPD_proteinCodingGenes, kegg, net)
+res
 ```
 
-```{r}
-res <- nf_proximity_test(COPD_proteinCodingGenes, kegg, net, max_size = 500)
-res$evidence <- nf_evidence_class(res)
-head(res[, c("set", "overlap", "overlap_expected", "d_c", "d_c_expected",
-             "p_overlap", "p_beyond", "p_combined", "fdr_combined", "evidence")], 10)
-table(res$evidence)
-```
+`res` is an `NFResult`. The per-gene-set table is a `DataFrame`:
 
-Columns:
+```{r table}
+tab <- enrichResults(res)
+head(tab[, c("set", "overlap", "overlap_expected", "n_linker",
+    "linker_expected", "p_overlap", "p_linker", "fdr_combined")])
+```
 
 | column | meaning |
 |---|---|
-| `overlap`, `overlap_expected` | observed and degree-expected number of query genes in the set |
-| `d_c`, `d_c_expected` | mean shortest-path distance from query genes to the set |
-| `p_overlap` | degree-aware overlap test (Poisson-binomial) |
-| `p_beyond` | proximity of non-member query genes, conditional on the overlap |
+| `overlap`, `overlap_expected` | query genes in the set (observed, expected) |
+| `n_linker`, `linker_expected` | query genes adjacent to (not in) the set |
+| `p_overlap` | degree-aware overlap test |
+| `p_linker` | beyond-overlap linker test |
+| `p_beyond` | beyond-overlap distance test |
 | `p_proximity` | total closest-distance proximity |
-| `p_combined` | Fisher combination of `p_overlap` and `p_beyond` |
+| `p_combined` | Fisher combination of `p_overlap` and `p_linker` |
 | `p_hyper` | classical hypergeometric ORA, for reference |
-| `linker_genes` | query genes adjacent to (but not in) the set |
+| `fdr_*` | Benjamini--Hochberg adjusted versions |
 
-## Plots
+# Interpreting the evidence
 
-```{r}
-plot_evidence_map(res)
+`evidenceClass()` attributes each significant gene set to its source of
+evidence:
+
+```{r evidence}
+table(evidenceClass(res))
 ```
 
-```{r}
-top <- res$set[res$evidence == "network only"][1]
-if (!is.na(top)) plot_linker_network(COPD_proteinCodingGenes, kegg[[top]], net) +
-  ggplot2::ggtitle(top)
+-   **overlap only** — driven by annotated members, as in ORA;
+-   **network only** — driven by linker genes: an association that
+    annotation-based enrichment misses;
+-   **overlap + network** — both.
+
+The evidence map shows the two components side by side:
+
+```{r evidence-map, fig.cap = "Evidence map of the COPD analysis."}
+plotEvidenceMap(res)
 ```
 
-```{r}
-nd <- nf_null_distribution(COPD_proteinCodingGenes, kegg, net, res$set[1])
-plot_null(nd, "S", title = res$set[1])
+```{r top-sets, fig.cap = "Top gene sets by the combined test."}
+plotTopSets(res, n = 15)
 ```
 
-## Many queries, custom networks and backgrounds
+For a single gene set, the linker network shows which query genes connect
+to it:
 
-Distances from every node to every gene set are computed once per library and
-can be reused:
-
-```{r, eval = FALSE}
-D <- set_distances(net, kegg)
-lapply(my_gene_lists, nf_proximity_test, genesets = kegg, net = net, D = D)
+```{r linker, fig.cap = "COPD genes linked to KEGG Nicotine addiction."}
+plotLinkerNetwork(res, "Nicotine addiction", net)
 ```
 
-Any edge list can be used as network (`nf_network(edges)`). For expression
-data, pass the measured genes as `background` so that null genes are drawn
-only from genes that could have been called differentially expressed.
+The 15q25 GWAS genes *CHRNA3* and *CHRNA5* are not annotated to this KEGG
+pathway but interact directly with its nicotinic-receptor members.
 
-## One-call wrapper
+The exact null distribution can be inspected too:
 
-```{r, eval = FALSE}
-NetFunrankR_wrapper(COPD_proteinCodingGenes, PE_ORA_pop = "KEGG",
-                    outdir = "NetFunrankR_results")
+```{r null, fig.height = 3.5}
+nd <- nullDistribution(COPD_proteinCodingGenes, kegg, net,
+    "Nicotine addiction")
+plotNullDistribution(nd, title = "Nicotine addiction")
 ```
 
-writes the result table and the evidence map, Venn diagram, comparison and
-linker-network plots (PDF and ggplot2 objects).
+# Your own data
+
+## Gene sets
+
+`netEnrich()` accepts a named list, a two-column table, a GMT file or a
+`GSEABase::GeneSetCollection`:
+
+```{r genesets, eval = FALSE}
+geneSets <- readGMT("h.all.v2024.1.Hs.symbols.gmt")
+res <- netEnrich(myGenes, geneSets, net)
+```
+
+## Interactomes
+
+Any edge list can be used:
+
+```{r network}
+data(STRING_v12_PPI)
+edges <- STRING_v12_PPI[STRING_v12_PPI$nokb_score >= 700, c("from", "to")]
+buildNetwork(edges, source = "STRING noKB >= 700")
+```
+
+## Expression data
+
+For lists of differentially expressed genes, pass all measured genes as
+`background`, so that null genes are drawn only from genes that could have
+been selected; lists longer than 500 genes automatically use the saddlepoint
+approximation.
+
+```{r background, eval = FALSE}
+res <- netEnrich(deGenes, kegg, net, background = measuredGenes)
+```
+
+## Many gene lists
+
+`netEnrichBatch()` computes the network distances once and can run in
+parallel with `r BiocStyle::Biocpkg("BiocParallel")`:
+
+```{r batch}
+lists <- list(all = COPD_proteinCodingGenes,
+    first100 = COPD_proteinCodingGenes[1:100])
+batch <- netEnrichBatch(lists, kegg, net)
+vapply(batch, function(r) sum(enrichResults(r)$fdr_combined < 0.05),
+    integer(1))
+```
+
+# Interactive dashboard
+
+```{r app, eval = FALSE}
+runNetFunrankRApp()
+```
+
+The dashboard lets you paste or upload genes, choose the pathway library and
+interactome, and explore an interactive evidence map, a searchable results
+table and linker networks. It also exports results, an HTML report and the R
+code that reproduces the analysis. Computation runs in background processes
+(via `r BiocStyle::CRANpkg("mirai")`) so the interface stays responsive.
+
+The dashboard is not tied to the bundled human data. Any gene-set libraries
+and interactomes, for any organism or identifier type, can be offered, which
+makes it easy to serve a customised instance for a lab or consortium:
+
+```{r app-custom, eval = FALSE}
+defaults <- dashboardDefaults()
+runNetFunrankRApp(
+    geneSets = c(defaults$geneSets["KEGG 2021"],
+        list("MSigDB Hallmark" = "h.all.v2024.1.Hs.symbols.gmt")),
+    networks = c(defaults$networks[1],
+        list("My interactome" = buildNetwork(read.csv("my_edges.csv")))),
+    workers = 2)
+```
+
+`netFunrankRApp()` returns the application object for hosting on Shiny
+Server, Posit Connect, shinyapps.io or in a container; ready-made recipes
+(Dockerfile, Hugging Face Spaces, Posit Connect Cloud) are in the `deploy/`
+directory of the source repository.
+
+# Comparison with ORA
+
+```{r ora}
+ora <- oraTest(COPD_proteinCodingGenes, kegg)
+c(ORA = sum(ora$padj < 0.05), NetFunrankR = sum(tab$fdr_combined < 0.05))
+```
+
+# Session information
+
+```{r session}
+sessionInfo()
+```

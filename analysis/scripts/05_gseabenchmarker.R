@@ -5,7 +5,7 @@
 #   ora (hypergeometric), camera, gsva, globaltest        [perm = 0]
 #   safe, gsea, padog, roast, samgs                         [perm = 1000]
 # Gene-list network methods (on the DE genes used by ORA, ADJ.PVAL < 0.05):
-#   NEA, RWR, Proximity-z (Guney), NFR-* (this work)
+#   NEA, RWR, Proximity-closest (Guney et al. 2016), NetFunrankR (this work)
 #
 # Output: analysis/results/gseabench/  (rankings, runtimes, relevance scores)
 source("analysis/scripts/00_setup.R")
@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
 })
 OUT <- file.path(RES, "gseabench")
 dir.create(OUT, showWarnings = FALSE)
-cores <- as.integer(Sys.getenv("NF_CORES", 14))
+cores <- nf_cores()
 
 # ---------------------------------------------------------------- data
 f_exp <- file.path(AN, "data", "geo2kegg_de.rds")
@@ -77,18 +77,18 @@ net_res <- parallel::parLapplyLB(cl, tasks, function(t) {
   q <- t$query
   out <- list()
   tm <- c()
-  nfr_names <- c("NFR-overlap", "NFR-linker", "NFR-distance", "NFR-total",
-                 "NFR-combined", "NFR-combined-dist")
-  if (sum(net$genes %in% q) < 2L) {
+  nfr_names <- c("NetFunrankR-overlap", "NetFunrankR-linker", "NetFunrankR-distance", "NetFunrankR-total",
+                 "NetFunrankR", "NetFunrankR-distance-combined")
+  if (sum(nodeNames(net) %in% q) < 2L) {
     p1 <- stats::setNames(rep(1, length(ctx$keep)), ctx$keep)
-    for (m in c("NEA", "RWR", "Proximity-z", nfr_names)) out[[m]] <- p1
+    for (m in c("NEA", "RWR", "Proximity-closest", nfr_names)) out[[m]] <- p1
     return(list(id = t$id, p = out, time = tm, n_query = length(q)))
   }
   tm["NEA"] <- system.time(out[["NEA"]] <- m_nea(q, ctx))[3]
   tm["RWR"] <- system.time(out[["RWR"]] <- m_rwr(q, ctx))[3]
-  tm["Proximity-z"] <- system.time(out[["Proximity-z"]] <- m_guney(q, ctx))[3]
+  tm["Proximity-closest"] <- system.time(out[["Proximity-closest"]] <- m_prox_closest(q, ctx))[3]
   # timing of one NetFunrankR run (m_nfr runs the test twice: linker + distance)
-  tm["NFR"] <- system.time(r <- m_nfr(q, ctx, background = t$background))[3] / 2
+  tm["NetFunrankR"] <- system.time(r <- m_nfr(q, ctx, background = t$background))[3] / 2
   out[nfr_names] <- r[nfr_names]
   list(id = t$id, p = out, time = tm, n_query = length(q))
 })

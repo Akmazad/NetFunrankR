@@ -74,7 +74,7 @@ lists <- lapply(names(traits), function(code) {
   a <- gw[grepl(traits[[code]], MAPPED_TRAIT, ignore.case = TRUE)]
   if (!nrow(a)) return(NULL)
   long <- a[, .(gene = split_genes(MAPPED_GENE)), by = .(DATE, PUBMEDID, row = seq_len(nrow(a)))]
-  long <- long[gene %in% net$genes]
+  long <- long[gene %in% nodeNames(net)]
   first <- long[, .(first = min(as.IDate(DATE))), by = gene]
   list(code = code, genes = first$gene, first = first)
 })
@@ -101,10 +101,10 @@ jobs <- c(lapply(names(lists), function(c) list(id = c, kind = "full", q = lists
           lapply(names(temporal), function(c) list(id = c, kind = "early", q = temporal[[c]]$early)))
 
 f_raw <- file.path(OUT, "gwas_raw.rds")
-METHODS <- nf_methods_env(c("ora", "nea", "rwr", "guney", "v1", "nfr"))
+METHODS <- nf_methods_env(c("ora", "nea", "rwr", "closest", "symmetric", "nfr"))
 rerun <- nzchar(Sys.getenv("NF_METHODS"))
 if (!file.exists(f_raw) || rerun) {
-  cl <- makeCluster(as.integer(Sys.getenv("NF_CORES", 14)))
+  cl <- makeCluster(nf_cores())
   clusterExport(cl, c("gs", "net", "METHODS"))
   clusterEvalQ(cl, {
     source("analysis/scripts/00_setup.R")
@@ -115,7 +115,7 @@ if (!file.exists(f_raw) || rerun) {
   res <- parLapplyLB(cl, jobs, function(j) {
     r <- run_genelist_methods(j$q, ctx, methods = METHODS, timing = TRUE)
     tm <- attr(r, "timing")
-    r[, `:=`(disease = j$id, kind = j$kind, n_query = sum(net$genes %in% j$q))]
+    r[, `:=`(disease = j$id, kind = j$kind, n_query = sum(nodeNames(net) %in% j$q))]
     list(r = r, time = tm)
   })
   stopCluster(cl)
@@ -164,7 +164,7 @@ aupr <- function(score, truth) {
 universe <- unique(unlist(gs))
 tv <- rbindlist(lapply(names(temporal), function(c) {
   late <- intersect(temporal[[c]]$late, universe)
-  ora_late <- nf_ora(late, gs, universe = universe, min_size = 1L)
+  ora_late <- oraTest(late, gs, universe = universe, minSize = 1L)
   truth_sets <- ora_late$set[ora_late$pvalue < 0.01]
   e <- pv[kind == "early" & disease == c & !is.na(p)]
   e[, .(auroc = auc(-log10(p), set %in% truth_sets),

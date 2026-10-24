@@ -16,14 +16,14 @@ n_target <- as.integer(Sys.getenv("NF_NTARGET", 100))
 nets <- readRDS(file.path(AN, "data", "nf_networks.rds"))
 net <- nets$string_nokb400
 gs <- kegg_symbols()
-n_in <- vapply(gs, function(s) sum(net$genes %in% s), 1L)
+n_in <- vapply(gs, function(s) sum(nodeNames(net) %in% s), 1L)
 set.seed(7)
 targets <- sample(names(n_in)[n_in >= 50 & n_in <= 200], n_target)
 design <- CJ(target = targets, s = signal, h = hidden)
 design[, id := .I]
 
-METHODS <- nf_methods_env(c("ora", "nea", "rwr", "guney", "v1", "nfr"))
-cl <- makeCluster(as.integer(Sys.getenv("NF_CORES", 14)))
+METHODS <- nf_methods_env(c("ora", "nea", "rwr", "closest", "symmetric", "nfr"))
+cl <- makeCluster(nf_cores())
 clusterExport(cl, "METHODS")
 on.exit(stopCluster(cl))
 clusterExport(cl, "n_query")
@@ -36,9 +36,9 @@ clusterEvalQ(cl, {
   # replace one gene set in a context (distances + incidence)
   ctx_replace <- function(ctx, name, genes) {
     ctx$gs[[name]] <- genes
-    ctx$D[, name] <- set_distances(ctx$net, ctx$gs[name])[, 1]
+    ctx$D[, name] <- geneSetDistances(ctx$net, ctx$gs[name])[, 1]
     j <- match(name, ctx$keep)
-    if (!is.na(j)) ctx$M[, j] <- as.numeric(ctx$net$genes %in% genes)
+    if (!is.na(j)) ctx$M[, j] <- as.numeric(nodeNames(ctx$net) %in% genes)
     ctx
   }
   NULL
@@ -47,12 +47,12 @@ clusterSetRNGStream(cl, 1103)
 
 res <- parLapplyLB(cl, seq_len(nrow(design)), function(i, design) {
   d <- design[i]
-  Y <- intersect(gs[[d$target]], net$genes)
+  Y <- intersect(gs[[d$target]], nodeNames(net))
   H <- sample(Y, round(d$h * length(Y)))
   ctx <- ctx_replace(ctx0, d$target, setdiff(gs[[d$target]], H))
   k <- round(d$s * n_query)
   sig <- sample(Y, k)
-  bg <- sample(setdiff(net$genes, Y), n_query - k)
+  bg <- sample(setdiff(nodeNames(net), Y), n_query - k)
   r <- run_genelist_methods(c(sig, bg), ctx, methods = METHODS)
   r[, `:=`(q = p.adjust(p, "BH"), rank = rank(p, ties.method = "average") / .N), by = method]
   out <- r[set == d$target]

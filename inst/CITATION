@@ -1,0 +1,13 @@
+bibentry(
+    bibtype = "Manual",
+    title = paste("NetFunrankR: decomposed, exact and calibrated",
+        "network-proximity enrichment analysis of gene lists"),
+    author = c(person("AKM", "Azad"), person("Mohammad Ali", "Moni")),
+    year = "2026",
+    note = paste("R package version", utils::packageVersion("NetFunrankR")),
+    url = "https://github.com/Akmazad/NetFunrankR",
+    textVersion = paste("Azad AKM, Moni MA (2026). NetFunrankR: decomposed,",
+        "exact and calibrated network-proximity enrichment analysis of gene",
+        "lists. R package.",
+        "https://github.com/Akmazad/NetFunrankR")
+)

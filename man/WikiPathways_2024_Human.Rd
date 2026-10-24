@@ -3,21 +3,25 @@
 \docType{data}
 \name{WikiPathways_2024_Human}
 \alias{WikiPathways_2024_Human}
-\title{WikiPathways_2024_Human}
+\title{WikiPathways (Enrichr WikiPathways_2024_Human)}
 \format{
-A data frame with two variables:
-\describe{
-\item{\code{GeneSymbol}}{HUGO gene symbols belonging to a pathway}
-\item{\code{PathwayName}}{Pathway name}
-}
+A \code{data.frame} with columns \code{GeneSymbol} and
+  \code{PathwayName}.
 }
 \source{
-<https://maayanlab.cloud/Enrichr/#libraries>
+\url{https://maayanlab.cloud/Enrichr/#libraries}
 }
 \usage{
 WikiPathways_2024_Human
 }
 \description{
-WikiPathway pathway annotation data from Enrichr Library
+WikiPathways (Enrichr WikiPathways_2024_Human)
+}
+\examples{
+data(WikiPathways_2024_Human, package = "NetFunrankR")
+length(unique(WikiPathways_2024_Human$PathwayName))
+}
+\seealso{
+\code{\link{loadPathways}}
 }
 \keyword{datasets}
